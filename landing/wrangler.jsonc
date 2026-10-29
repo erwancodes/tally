@@ -1,0 +1,6 @@
+{
+  "name": "tally-landing",
+  "compatibility_date": "2026-10-01",
+  "assets": { "directory": "." },
+  "routes": [{ "pattern": "tally.erwanx.com", "custom_domain": true }]
+}

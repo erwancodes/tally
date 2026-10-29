@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tally · tes tokens IA dans la barre des tâches</title>
+  <meta name="description" content="Tally vit dans la barre des tâches de Windows et compte les tokens de Claude Code et Codex, par jour, semaine et mois. 100 % local, open source MIT.">
+  <meta name="theme-color" content="#0e0e11">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="https://tally.erwanx.com/">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://tally.erwanx.com/">
+  <meta property="og:title" content="Tally · tes tokens IA, juste à côté de l'heure">
+  <meta property="og:description" content="Mini app Windows open source qui compte les tokens de tes agents IA de code. 100 % local.">
+  <meta property="og:image" content="https://tally.erwanx.com/og.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@ErwanCodes">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="main.js" defer></script>
+</head>
+<body>
+  <header class="top">
+    <a class="wordmark" href="/" aria-label="Tally, accueil">
+      <svg width="22" height="22" viewBox="0 0 16 16" aria-hidden="true"><g stroke-width="1.7" stroke-linecap="round"><path d="M3 3v10M6 3v10M9 3v10M12 3v10" stroke="var(--green)"/><path d="M1.5 11.5L14.5 4.5" stroke="var(--violet)"/></g></svg>
+      Tally
+    </a>
+    <nav class="top__nav" aria-label="Sections">
+      <a href="#comment">Comment ça marche</a>
+      <a href="#agents">Agents</a>
+      <a href="#faq">FAQ</a>
+      <a class="top__gh" href="https://github.com/erwancodes/tally">GitHub <span class="stars" data-stars hidden></span></a>
+    </nav>
+  </header>
+
+  <main>
+    <!-- Hero: the tally mark at full scale, the Windows taskbar sitting on it -->
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero__text">
+        <h1 id="hero-title" class="reveal">Tes tokens IA, juste à côté de l'heure.</h1>
+        <p class="hero__lead reveal">Tally vit dans la barre des tâches de Windows et compte les tokens de Claude Code et Codex, par jour, par semaine et par mois. Rien ne quitte ton PC.</p>
+        <div class="hero__actions reveal">
+          <a class="btn btn--primary" href="https://github.com/erwancodes/tally/releases/latest">
+            <svg width="18" height="18" viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M1 2.5l5.5-.8v5.6H1zM7.3 1.6L15 .5v6.8H7.3zM1 8.1h5.5v5.6L1 13zM7.3 8.1H15v6.9l-7.7-1.1z"/></svg>
+            Télécharger pour Windows
+          </a>
+          <a class="btn btn--ghost" href="https://github.com/erwancodes/tally">
+            <svg width="18" height="18" viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 0a8 8 0 0 0-2.5 15.6c.4 0 .5-.2.5-.4v-1.5c-2.2.5-2.7-1-2.7-1-.4-.9-.9-1.2-.9-1.2-.7-.5.1-.5.1-.5.8.1 1.2.8 1.2.8.7 1.3 1.9.9 2.3.7.1-.5.3-.9.5-1.1-1.8-.2-3.6-.9-3.6-4 0-.9.3-1.6.8-2.1-.1-.2-.4-1 .1-2.1 0 0 .7-.2 2.2.8a7.4 7.4 0 0 1 4 0c1.5-1 2.2-.8 2.2-.8.4 1.1.2 1.9.1 2.1.5.6.8 1.3.8 2.1 0 3.1-1.9 3.8-3.6 4 .3.3.6.8.6 1.5v2.2c0 .2.1.5.6.4A8 8 0 0 0 8 0z"/></svg>
+            Voir sur GitHub <span class="stars" data-stars hidden></span>
+          </a>
+        </div>
+        <p class="hero__note reveal">Windows 10 et 11 · 5 Mo · gratuit et open source</p>
+      </div>
+
+      <div class="hero__stage">
+        <svg class="hero__motif" viewBox="0 0 1000 620" preserveAspectRatio="xMidYMin slice" aria-hidden="true">
+          <g stroke-linecap="round" stroke-width="96" fill="none">
+            <path class="stroke" d="M230 70v640" stroke="var(--green)"/>
+            <path class="stroke" d="M410 70v640" stroke="var(--green)"/>
+            <path class="stroke" d="M590 70v640" stroke="var(--green)"/>
+            <path class="stroke" d="M770 70v640" stroke="var(--green)"/>
+            <path class="stroke stroke--cross" d="M90 560L910 150" stroke="var(--violet)"/>
+          </g>
+        </svg>
+
+        <!-- The live thing: a working Windows taskbar. Hover the tray icon for the tooltip, click it for the window. -->
+        <div class="desk" data-ui>
+          <div class="popup" id="popup" data-open="true" aria-label="Fenêtre de Tally">
+            <div class="popup__bar">
+              <span class="popup__title"><svg width="13" height="13" viewBox="0 0 16 16" aria-hidden="true"><g stroke-width="1.8" stroke-linecap="round"><path d="M3 3v10M6 3v10M9 3v10M12 3v10" stroke="var(--green)"/><path d="M1.5 11.5L14.5 4.5" stroke="var(--violet)"/></g></svg>Tally</span>
+              <span class="popup__win" aria-hidden="true"><i></i><i></i><i></i></span>
+            </div>
+            <div class="popup__body">
+              <div class="popup__cards">
+                <div class="pcard">
+                  <span>Aujourd'hui</span>
+                  <strong class="num" data-today>1,24M</strong>
+                  <em class="up">+18 %</em>
+                </div>
+                <div class="pcard">
+                  <span>7 jours</span>
+                  <strong class="num">9,81M</strong>
+                  <em class="up">+6 %</em>
+                </div>
+                <div class="pcard">
+                  <span>Ce mois</span>
+                  <strong class="num">38,2M</strong>
+                  <em class="down">−4 %</em>
+                </div>
+              </div>
+              <div class="popup__chart" aria-hidden="true" data-chart></div>
+            </div>
+          </div>
+
+          <div class="taskbar">
+            <div class="taskbar__apps" aria-hidden="true">
+              <span class="tb-start"><svg viewBox="0 0 16 16"><path fill="#4cc2ff" d="M1 1h6.5v6.5H1zM8.5 1H15v6.5H8.5zM1 8.5h6.5V15H1zM8.5 8.5H15V15H8.5z"/></svg></span>
+              <span class="tb-app"></span><span class="tb-app tb-app--on"></span><span class="tb-app"></span>
+            </div>
+            <div class="tray">
+              <span class="tray__tip" role="tooltip" id="tray-tip">Aujourd'hui : <b class="num" data-today>1,24M</b> tokens</span>
+              <button class="tray__icon" type="button" aria-describedby="tray-tip" aria-controls="popup" aria-expanded="true" data-tray>
+                <svg viewBox="0 0 16 16" aria-hidden="true"><g stroke-width="1.8" stroke-linecap="round"><path d="M3 3v10M6 3v10M9 3v10M12 3v10" stroke="var(--green)"/><path d="M1.5 11.5L14.5 4.5" stroke="var(--violet)"/></g></svg>
+                <span class="sr">Ouvrir ou fermer Tally</span>
+              </button>
+              <span class="tray__sys" aria-hidden="true">
+                <svg viewBox="0 0 16 16"><path fill="none" stroke="currentColor" stroke-width="1.3" d="M2 6.5a9 9 0 0 1 12 0M4.2 9a5.6 5.6 0 0 1 7.6 0M6.4 11.4a2.3 2.3 0 0 1 3.2 0"/></svg>
+                <svg viewBox="0 0 16 16"><path fill="none" stroke="currentColor" stroke-width="1.3" d="M2 6h3l4-3v10L5 10H2zM11.5 5.5a3.5 3.5 0 0 1 0 5"/></svg>
+              </span>
+              <span class="tray__clock"><span data-clock>21:42</span><span data-date>29/10/2026</span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Showcase: the one setting that changes the number, blown up -->
+    <section class="showcase" data-cache="on" aria-labelledby="showcase-title">
+      <div class="showcase__text">
+        <h2 id="showcase-title" class="reveal">Le cache compte<span data-cache-word>.</span></h2>
+        <p class="reveal">Claude Code relit son contexte à chaque message. Avec le cache, ta journée pèse <b class="num" data-cache-total>1,24M</b> tokens&nbsp;; sans, <b class="num">131k</b>. Tally te laisse choisir ce que tu comptes.</p>
+      </div>
+      <div class="bigtoggle" data-ui>
+        <span class="bigtoggle__label">Compter le cache</span>
+        <button class="bigtoggle__switch" type="button" role="switch" aria-checked="true" aria-label="Compter le cache" data-cache-toggle><span></span></button>
+        <span class="bigtoggle__value num" data-cache-value>1,24M</span>
+      </div>
+    </section>
+
+    <!-- How it works: three steps, each larger than the one before -->
+    <section class="steps" id="comment" aria-labelledby="steps-title">
+      <h2 id="steps-title" class="steps__title reveal">Trois clics, pas un de plus.</h2>
+      <ol class="steps__row">
+        <li class="step step--1">
+          <div class="step__tile reveal" data-ui>
+            <div class="installer">
+              <div class="installer__head"><svg width="18" height="18" viewBox="0 0 16 16" aria-hidden="true"><g stroke-width="1.8" stroke-linecap="round"><path d="M3 3v10M6 3v10M9 3v10M12 3v10" stroke="var(--green)"/><path d="M1.5 11.5L14.5 4.5" stroke="var(--violet)"/></g></svg>Installation de Tally 0.1.0</div>
+              <div class="installer__bar"><i></i></div>
+              <div class="installer__foot"><span>Copie des fichiers…</span><span class="num">72 %</span></div>
+            </div>
+          </div>
+          <h3 class="reveal">Installe-le</h3>
+          <p class="reveal">Un .msi de 5 Mo depuis GitHub. Pas de compte, pas de clé, pas de configuration.</p>
+        </li>
+        <li class="step step--2">
+          <div class="step__tile reveal" data-ui>
+            <div class="trayzoom">
+              <span class="trayzoom__tip">Aujourd'hui : <b class="num">1,24M</b> tokens</span>
+              <div class="trayzoom__bar">
+                <span class="trayzoom__icon is-new"><svg viewBox="0 0 16 16" aria-hidden="true"><g stroke-width="1.8" stroke-linecap="round"><path d="M3 3v10M6 3v10M9 3v10M12 3v10" stroke="var(--green)"/><path d="M1.5 11.5L14.5 4.5" stroke="var(--violet)"/></g></svg></span>
+                <span class="trayzoom__sys"></span><span class="trayzoom__sys"></span>
+                <span class="trayzoom__clock num">21:42</span>
+              </div>
+            </div>
+          </div>
+          <h3 class="reveal">L'icône apparaît</h3>
+          <p class="reveal">Elle se loge près de l'heure. Survole-la et tu lis le total du jour, mis à jour en direct.</p>
+        </li>
+        <li class="step step--3">
+          <div class="step__tile reveal" data-ui>
+            <div class="minidash">
+              <div class="minidash__row">
+                <div><span>Aujourd'hui</span><strong class="num">1,24M</strong></div>
+                <div><span>7 jours</span><strong class="num">9,81M</strong></div>
+              </div>
+              <div class="minidash__chart" data-chart data-days="14"></div>
+              <div class="minidash__legend"><span><i style="background:var(--green)"></i>Claude Code</span><span><i style="background:var(--violet)"></i>Codex</span></div>
+            </div>
+          </div>
+          <h3 class="reveal">Clique, tout est là</h3>
+          <p class="reveal">Jour, semaine, mois, les 30 derniers jours par agent, et le détail par modèle.</p>
+        </li>
+      </ol>
+    </section>
+
+    <!-- Agents: index rows, the hovered row shows what Tally reads -->
+    <section class="agents" id="agents" aria-labelledby="agents-title">
+      <div class="agents__head">
+        <h2 id="agents-title" class="reveal">Les agents qu'il sait lire</h2>
+        <p class="reveal">Tally lit les journaux que tes agents écrivent déjà sur ton disque. Il ne se branche sur aucune API.</p>
+      </div>
+      <div class="index">
+        <ul class="index__list">
+          <li class="index__row is-active" data-preview="claude">
+            <span class="index__name">Claude Code</span>
+            <span class="index__state">Pris en charge</span>
+            <div class="index__inline" data-ui><code-path>~\.claude\projects\**\*.jsonl</code-path></div>
+          </li>
+          <li class="index__row" data-preview="codex">
+            <span class="index__name">Codex</span>
+            <span class="index__state">Pris en charge</span>
+            <div class="index__inline" data-ui><code-path>~\.codex\sessions\**\rollout-*.jsonl</code-path></div>
+          </li>
+          <li class="index__row is-soon" data-preview="opencode">
+            <span class="index__name">OpenCode</span>
+            <span class="index__state badge">Bientôt</span>
+            <div class="index__inline" data-ui><code-path>Bientôt dans Tally</code-path></div>
+          </li>
+          <li class="index__row is-soon" data-preview="kimi">
+            <span class="index__name">Kimi</span>
+            <span class="index__state badge">Bientôt</span>
+            <div class="index__inline" data-ui><code-path>Bientôt dans Tally</code-path></div>
+          </li>
+        </ul>
+        <div class="index__frame" aria-hidden="true">
+          <figure class="preview is-on" data-for="claude" data-ui>
+            <div class="preview__path">~\.claude\projects\demo\session.jsonl</div>
+            <div class="preview__rows">
+              <div><span>claude-opus-5-5</span><b class="num">1,02M</b></div>
+              <div><span>claude-sonnet-5-5</span><b class="num">184k</b></div>
+              <div><span>claude-haiku-5-5</span><b class="num">31,4k</b></div>
+            </div>
+            <figcaption>Input, output, cache lu et écrit, dédoublonnés par message.</figcaption>
+          </figure>
+          <figure class="preview" data-for="codex" data-ui>
+            <div class="preview__path">~\.codex\sessions\2026\10\29\rollout-….jsonl</div>
+            <div class="preview__rows">
+              <div><span>gpt-6-sol</span><b class="num">412k</b></div>
+              <div><span>gpt-5.6-terra</span><b class="num">58,1k</b></div>
+            </div>
+            <figcaption>Input sans le cache, output et cache lu, par réponse.</figcaption>
+          </figure>
+          <figure class="preview preview--soon" data-for="opencode" data-ui>
+            <div class="preview__path">OpenCode</div>
+            <p>Un provider, c'est un fichier Rust et quelques fixtures. Le guide explique tout.</p>
+          </figure>
+          <figure class="preview preview--soon" data-for="kimi" data-ui>
+            <div class="preview__path">Kimi</div>
+            <p>Tu l'utilises tous les jours&nbsp;? Ajoute-le, la PR est la bienvenue.</p>
+          </figure>
+        </div>
+      </div>
+      <a class="link-arrow reveal" href="https://github.com/erwancodes/tally/blob/main/docs/ADD_A_PROVIDER.md">Ajoute ton agent <span aria-hidden="true">→</span></a>
+    </section>
+
+    <!-- The band that splits the page in two: privacy -->
+    <section class="band" aria-labelledby="privacy-title">
+      <h2 id="privacy-title" class="reveal">100 % local. Rien ne sort.</h2>
+      <ul class="band__list">
+        <li class="reveal"><b>Zéro compte</b><span>Tu installes, ça compte. Aucune inscription.</span></li>
+        <li class="reveal"><b>Zéro télémétrie</b><span>L’app ne fait aucune requête réseau et n’embarque aucun tracker.</span></li>
+        <li class="reveal"><b>Lecture seule</b><span>Tally lit tes journaux, il n'y écrit jamais.</span></li>
+        <li class="reveal"><b>Open source MIT</b><span>Tout le code est sur GitHub, lis-le avant d'installer.</span></li>
+      </ul>
+    </section>
+
+    <!-- FAQ: index cards in a drawer -->
+    <section class="faq" id="faq" aria-labelledby="faq-title">
+      <h2 id="faq-title" class="reveal">Tes questions</h2>
+      <div class="cards">
+        <details class="card" name="faq" open>
+          <summary><span class="card__tab">Données</span><span class="card__q">Mes données sortent-elles de mon PC&nbsp;?</span><span class="plus" aria-hidden="true"></span></summary>
+          <div class="card__a"><p>Non. Tally lit les fichiers que Claude Code et Codex écrivent déjà sur ton disque, et garde ses totaux dans une petite base SQLite dans <code-path>%APPDATA%\Tally</code-path>. L'app ne fait aucune requête réseau.</p></div>
+        </details>
+        <details class="card" name="faq">
+          <summary><span class="card__tab">Agents</span><span class="card__q">Quels agents sont pris en charge&nbsp;?</span><span class="plus" aria-hidden="true"></span></summary>
+          <div class="card__a"><p>Claude Code et Codex aujourd'hui. OpenCode et Kimi arrivent. Chaque agent est un petit module Rust&nbsp;: le guide <code-path>ADD_A_PROVIDER.md</code-path> montre comment en ajouter un.</p></div>
+        </details>
+        <details class="card" name="faq">
+          <summary><span class="card__tab">macOS</span><span class="card__q">Ça marche sur macOS ou Linux&nbsp;?</span><span class="plus" aria-hidden="true"></span></summary>
+          <div class="card__a"><p>Pas encore. Tally est construit avec Tauri, donc le portage est possible, mais la v0.1 vise Windows 10 et 11 et sa zone de notification.</p></div>
+        </details>
+        <details class="card" name="faq">
+          <summary><span class="card__tab">Exactitude</span><span class="card__q">Les chiffres sont-ils justes&nbsp;?</span><span class="plus" aria-hidden="true"></span></summary>
+          <div class="card__a"><p>Tally compte chaque message une seule fois, même quand un agent l'écrit plusieurs fois dans ses journaux. Ses totaux restent à moins de 1&nbsp;% de ceux de ccusage sur les mêmes fichiers.</p></div>
+        </details>
+        <details class="card" name="faq">
+          <summary><span class="card__tab">Cache</span><span class="card__q">Pourquoi mes chiffres sont-ils si gros&nbsp;?</span><span class="plus" aria-hidden="true"></span></summary>
+          <div class="card__a"><p>Parce que le cache compte. Un agent relit tout son contexte à chaque message, et ces lectures se comptent en millions. Coupe « Compter le cache » dans les réglages pour ne voir que l'input et l'output.</p></div>
+        </details>
+        <details class="card" name="faq">
+          <summary><span class="card__tab">Ressources</span><span class="card__q">Est-ce que ça ralentit mon PC&nbsp;?</span><span class="plus" aria-hidden="true"></span></summary>
+          <div class="card__a"><p>Non. Après une première lecture, Tally ne relit que les lignes ajoutées depuis la dernière fois. Au repos, il attend simplement qu'un fichier change.</p></div>
+        </details>
+        <details class="card" name="faq">
+          <summary><span class="card__tab">Prix</span><span class="card__q">Combien ça coûte&nbsp;?</span><span class="plus" aria-hidden="true"></span></summary>
+          <div class="card__a"><p>Rien. Tally est gratuit et sous licence MIT. Pas de version payante, pas de compte, pas de limite.</p></div>
+        </details>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="cta" aria-labelledby="cta-title">
+      <h2 id="cta-title" class="reveal">Compte dès ce soir.</h2>
+      <div class="cta__row reveal">
+        <a class="btn btn--primary" href="https://github.com/erwancodes/tally/releases/latest">Télécharger pour Windows</a>
+        <p>Le dernier .msi sur GitHub Releases. Il s'installe en dix secondes et se lance avec Windows si tu veux.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <svg class="foot__mark" viewBox="0 0 1000 300" preserveAspectRatio="none" aria-hidden="true">
+      <rect x="0" y="0" width="196" height="300" rx="14" fill="var(--green)"/>
+      <rect x="200" y="40" width="196" height="260" rx="14" fill="var(--green)"/>
+      <rect x="400" y="10" width="196" height="290" rx="14" fill="var(--green)"/>
+      <rect x="600" y="60" width="196" height="240" rx="14" fill="var(--green)"/>
+      <rect x="800" y="110" width="200" height="190" rx="14" fill="var(--violet)"/>
+    </svg>
+    <div class="foot__cols">
+      <div><b>Tally</b><a href="https://github.com/erwancodes/tally/releases/latest">Télécharger</a><a href="#comment">Comment ça marche</a><a href="#faq">FAQ</a></div>
+      <div><b>Code</b><a href="https://github.com/erwancodes/tally">GitHub</a><a href="https://github.com/erwancodes/tally/blob/main/docs/ADD_A_PROVIDER.md">Ajouter un agent</a><a href="https://github.com/erwancodes/tally/blob/main/LICENSE">Licence MIT</a></div>
+      <div><b>Auteur</b><a href="https://x.com/ErwanCodes">Fait par @ErwanCodes</a><a href="https://erwanx.com">erwanx.com</a></div>
+    </div>
+    <div class="foot__last">
+      <span>© 2026 Tally · MIT</span>
+      <a class="btn btn--small" href="#top" data-top>Haut de page</a>
+    </div>
+  </footer>
+</body>
+</html>
