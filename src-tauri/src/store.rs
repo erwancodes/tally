@@ -6,6 +6,7 @@ use anyhow::Result;
 use chrono::{Datelike, Duration, Local, NaiveDate, TimeZone};
 use rusqlite::{params, Connection, OptionalExtension};
 use serde::Serialize;
+use std::collections::HashMap;
 use std::path::Path;
 
 pub struct Store {
@@ -78,6 +79,42 @@ pub struct ModelTotals {
     pub model: String,
     pub totals: Totals,
     pub last_seen_ms: i64,
+    /// Estimated API cost in dollars; None for models without a known price.
+    pub cost: Option<f64>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct SessionTotals {
+    pub agent: String,
+    pub session: String,
+    pub project: Option<String>,
+    /// Models used, most tokens first.
+    pub models: Vec<String>,
+    pub first_ms: i64,
+    pub last_ms: i64,
+    pub totals: Totals,
+    pub cost: Option<f64>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct ProjectTotals {
+    pub project: Option<String>,
+    pub agents: Vec<String>,
+    pub sessions: usize,
+    pub last_ms: i64,
+    pub totals: Totals,
+    pub cost: Option<f64>,
+}
+
+fn add_cost(acc: &mut Option<f64>, c: Option<f64>) {
+    if let Some(c) = c {
+        *acc = Some(acc.unwrap_or(0.0) + c);
+    }
+}
+
+/// Local midnight `days - 1` days ago, so 1 means today.
+pub fn days_ago_ms(days: u32) -> i64 {
+    local_ms(Local::now().date_naive() - Duration::days(days.clamp(1, 3650) as i64 - 1))
 }
 
 const TOTALS_SQL: &str =
@@ -120,12 +157,18 @@ impl Store {
              CREATE TABLE IF NOT EXISTS events(
                id TEXT NOT NULL, agent TEXT NOT NULL, model TEXT, ts INTEGER NOT NULL,
                input INTEGER NOT NULL, output INTEGER NOT NULL,
-               cache_read INTEGER NOT NULL, cache_write INTEGER NOT NULL, project TEXT,
+               cache_read INTEGER NOT NULL, cache_write INTEGER NOT NULL, project TEXT, session TEXT,
                PRIMARY KEY(agent, id));
              CREATE INDEX IF NOT EXISTS events_ts ON events(ts);
              CREATE TABLE IF NOT EXISTS file_state(
                path TEXT PRIMARY KEY, size INTEGER NOT NULL, mtime INTEGER NOT NULL, offset INTEGER NOT NULL);",
         )?;
+        let version: i64 = conn.query_row("PRAGMA user_version", [], |r| r.get(0))?;
+        if version < 1 {
+            // v1 adds the session column; older rows lack it, so everything is read again.
+            let _ = conn.execute("ALTER TABLE events ADD COLUMN session TEXT", []);
+            conn.execute_batch("DELETE FROM events; DELETE FROM file_state; PRAGMA user_version=1;")?;
+        }
         Ok(Store { conn })
     }
 
@@ -145,13 +188,13 @@ impl Store {
         let mut added = 0;
         {
             let mut stmt = tx.prepare_cached(
-                "INSERT OR IGNORE INTO events(id, agent, model, ts, input, output, cache_read, cache_write, project)
-                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
+                "INSERT OR IGNORE INTO events(id, agent, model, ts, input, output, cache_read, cache_write, project, session)
+                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)",
             )?;
             for e in events {
                 added += stmt.execute(params![
                     e.id, e.agent, e.model, e.timestamp.timestamp_millis(),
-                    e.input as i64, e.output as i64, e.cache_read as i64, e.cache_write as i64, e.project
+                    e.input as i64, e.output as i64, e.cache_read as i64, e.cache_write as i64, e.project, e.session
                 ])?;
             }
             tx.execute(
@@ -257,15 +300,102 @@ impl Store {
         ))?;
         let rows = stmt
             .query_map([], |r| {
+                let model: String = r.get(1)?;
+                let totals = row_totals(r, 2)?;
                 Ok(ModelTotals {
                     agent: r.get(0)?,
-                    model: r.get(1)?,
-                    totals: row_totals(r, 2)?,
+                    cost: crate::pricing::cost(&model, &totals),
+                    model,
+                    totals,
                     last_seen_ms: r.get(6)?,
                 })
             })?
             .collect::<rusqlite::Result<Vec<_>>>()?;
         Ok(rows)
+    }
+
+    /// Per-session totals since `from_ms`, most recent first.
+    pub fn sessions(&self, from_ms: i64, agents: &[String]) -> Result<Vec<SessionTotals>> {
+        let mut stmt = self.conn.prepare_cached(&format!(
+            "SELECT agent, COALESCE(session, ''), COALESCE(model, ''), MAX(project), MIN(ts), MAX(ts), {TOTALS_SQL}
+             FROM events WHERE ts >= ?1 GROUP BY agent, session, model"
+        ))?;
+        let rows = stmt
+            .query_map([from_ms], |r| {
+                Ok((
+                    r.get::<_, String>(0)?,
+                    r.get::<_, String>(1)?,
+                    r.get::<_, String>(2)?,
+                    r.get::<_, Option<String>>(3)?,
+                    r.get::<_, i64>(4)?,
+                    r.get::<_, i64>(5)?,
+                    row_totals(r, 6)?,
+                ))
+            })?
+            .collect::<rusqlite::Result<Vec<_>>>()?;
+        // One row per model: fold them into their session, keeping model sizes for ordering.
+        let mut by_key: HashMap<(String, String), (SessionTotals, Vec<(String, u64)>)> = HashMap::new();
+        for (agent, session, model, project, first, last, totals) in rows {
+            if !agents.contains(&agent) {
+                continue;
+            }
+            let (s, models) = by_key.entry((agent.clone(), session.clone())).or_insert_with(|| {
+                let s = SessionTotals {
+                    agent,
+                    session,
+                    project: None,
+                    models: vec![],
+                    first_ms: first,
+                    last_ms: last,
+                    totals: Totals::default(),
+                    cost: None,
+                };
+                (s, vec![])
+            });
+            s.project = s.project.take().or(project);
+            s.first_ms = s.first_ms.min(first);
+            s.last_ms = s.last_ms.max(last);
+            add_cost(&mut s.cost, crate::pricing::cost(&model, &totals));
+            s.totals.add(&totals);
+            if !model.is_empty() {
+                models.push((model, totals.total(true)));
+            }
+        }
+        let mut out: Vec<SessionTotals> = by_key
+            .into_values()
+            .map(|(mut s, mut models)| {
+                models.sort_by(|a, b| b.1.cmp(&a.1));
+                s.models = models.into_iter().map(|m| m.0).collect();
+                s
+            })
+            .collect();
+        out.sort_by(|a, b| b.last_ms.cmp(&a.last_ms));
+        Ok(out)
+    }
+
+    /// Per-project totals since `from_ms`, most tokens first.
+    pub fn projects(&self, from_ms: i64, agents: &[String]) -> Result<Vec<ProjectTotals>> {
+        let mut by_project: HashMap<Option<String>, ProjectTotals> = HashMap::new();
+        for s in self.sessions(from_ms, agents)? {
+            let p = by_project.entry(s.project.clone()).or_insert_with(|| ProjectTotals {
+                project: s.project.clone(),
+                agents: vec![],
+                sessions: 0,
+                last_ms: 0,
+                totals: Totals::default(),
+                cost: None,
+            });
+            if !p.agents.contains(&s.agent) {
+                p.agents.push(s.agent.clone());
+            }
+            p.sessions += 1;
+            p.last_ms = p.last_ms.max(s.last_ms);
+            p.totals.add(&s.totals);
+            add_cost(&mut p.cost, s.cost);
+        }
+        let mut out: Vec<ProjectTotals> = by_project.into_values().collect();
+        out.sort_by(|a, b| b.totals.total(true).cmp(&a.totals.total(true)));
+        Ok(out)
     }
 }
 
@@ -285,6 +415,7 @@ mod tests {
             cache_read: 100,
             cache_write: 1,
             project: None,
+            session: Some(format!("s-{agent}")),
         }
     }
 
@@ -327,5 +458,46 @@ mod tests {
         assert_eq!(days.len(), 30);
         assert_eq!(days.last().unwrap().by_agent.len(), 2);
         assert_eq!(s.models().unwrap().len(), 2);
+    }
+
+    #[test]
+    fn sessions_and_projects_fold_models() {
+        let mut s = Store::in_memory().unwrap();
+        let st = FileState { size: 0, mtime: 0, offset: 0 };
+        let mut a = ev("a", "claude-code", 1, 1_000_000);
+        a.model = Some("claude-opus-5-5".into());
+        a.project = Some("tally".into());
+        let mut b = ev("b", "claude-code", 0, 500_000);
+        b.model = Some("claude-haiku-5-5".into());
+        s.ingest("f", st, &[a, b, ev("c", "codex", 0, 5)]).unwrap();
+        let sessions = s.sessions(0, &agents()).unwrap();
+        assert_eq!(sessions.len(), 2);
+        let claude = sessions.iter().find(|x| x.agent == "claude-code").unwrap();
+        assert_eq!(claude.project.as_deref(), Some("tally"));
+        assert_eq!(claude.totals.input, 1_500_000);
+        assert_eq!(claude.models[0], "claude-opus-5-5");
+        assert!(claude.cost.unwrap() > 4.0);
+        assert!(sessions.iter().find(|x| x.agent == "codex").unwrap().cost.is_none());
+        let projects = s.projects(0, &agents()).unwrap();
+        assert_eq!(projects.len(), 2);
+        assert_eq!(projects[0].project.as_deref(), Some("tally"));
+        assert_eq!(projects[0].sessions, 1);
+    }
+
+    #[test]
+    fn migration_adds_session_and_forces_rescan() {
+        let conn = Connection::open_in_memory().unwrap();
+        conn.execute_batch(
+            "CREATE TABLE events(id TEXT NOT NULL, agent TEXT NOT NULL, model TEXT, ts INTEGER NOT NULL,
+               input INTEGER NOT NULL, output INTEGER NOT NULL, cache_read INTEGER NOT NULL,
+               cache_write INTEGER NOT NULL, project TEXT, PRIMARY KEY(agent, id));
+             CREATE TABLE file_state(path TEXT PRIMARY KEY, size INTEGER NOT NULL, mtime INTEGER NOT NULL, offset INTEGER NOT NULL);
+             INSERT INTO file_state VALUES ('f', 1, 1, 1);",
+        )
+        .unwrap();
+        let mut s = Store::init(conn).unwrap();
+        assert_eq!(s.file_state("f").unwrap(), None);
+        let st = FileState { size: 0, mtime: 0, offset: 0 };
+        assert_eq!(s.ingest("f", st, &[ev("x", "codex", 0, 1)]).unwrap(), 1);
     }
 }

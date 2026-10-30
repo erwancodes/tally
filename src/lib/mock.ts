@@ -1,5 +1,5 @@
 // Sample data for running the front without Tauri. Never used in the app itself.
-import type { AgentInfo, DayStat, ModelTotals, Overview, Settings, Totals } from "./api";
+import type { AgentInfo, DayStat, ModelTotals, Overview, ProjectTotals, SessionTotals, Settings, Totals } from "./api";
 
 function rand(seed: number) {
   const x = Math.sin(seed * 9301 + 49297) * 233280;
@@ -60,6 +60,22 @@ const sixty = days(60);
 const last = (n: number, skip = 0) => sixty.slice(sixty.length - n - skip, sixty.length - skip);
 const monthDay = new Date().getDate();
 
+const projects = ["tally", "stagepilot", "terratalk", null];
+const sessions: SessionTotals[] = Array.from({ length: 14 }, (_, i) => {
+  const agent = i % 3 === 2 ? "codex" : "claude-code";
+  const last = Date.now() - i * 5_400_000 - rand(i) * 3_600_000;
+  return {
+    agent,
+    session: Math.floor(rand(i + 99) * 0xffffffff).toString(16).padStart(8, "0") + "-4c1a",
+    project: projects[i % projects.length],
+    models: agent === "codex" ? ["gpt-6-sol"] : i % 4 === 0 ? ["claude-opus-5-5", "claude-haiku-5-5"] : ["claude-opus-5-5"],
+    first_ms: last - (20 + rand(i + 3) * 160) * 60_000,
+    last_ms: last,
+    totals: totals(0.8 + rand(i + 5) * 2, i + 20),
+    cost: agent === "codex" ? null : 1.2 + rand(i + 9) * 18,
+  };
+});
+
 let settings: Settings = { providers: {}, include_cache: true };
 
 const handlers: Record<string, (args?: Record<string, unknown>) => unknown> = {
@@ -75,11 +91,27 @@ const handlers: Record<string, (args?: Record<string, unknown>) => unknown> = {
   }),
   get_daily: (args) => last(Number(args?.days ?? 30)),
   get_models: (): ModelTotals[] => [
-    { agent: "claude-code", model: "claude-opus-5-5", totals: totals(24, 1), last_seen_ms: Date.now() - 4000 },
-    { agent: "claude-code", model: "claude-sonnet-5-5", totals: totals(6, 2), last_seen_ms: Date.now() - 86_400_000 },
-    { agent: "claude-code", model: "claude-haiku-5-5", totals: totals(0.8, 3), last_seen_ms: Date.now() - 3 * 86_400_000 },
-    { agent: "codex", model: "gpt-6-sol", totals: totals(7, 4), last_seen_ms: Date.now() - 3_600_000 },
+    { agent: "claude-code", model: "claude-opus-5-5", totals: totals(24, 1), last_seen_ms: Date.now() - 4000, cost: 214.3 },
+    { agent: "claude-code", model: "claude-sonnet-5-5", totals: totals(6, 2), last_seen_ms: Date.now() - 86_400_000, cost: 26.8 },
+    { agent: "claude-code", model: "claude-haiku-5-5", totals: totals(0.8, 3), last_seen_ms: Date.now() - 3 * 86_400_000, cost: 0.21 },
+    { agent: "codex", model: "gpt-6-sol", totals: totals(7, 4), last_seen_ms: Date.now() - 3_600_000, cost: null },
   ],
+  get_sessions: (): SessionTotals[] => sessions,
+  get_projects: (): ProjectTotals[] => {
+    const by = new Map<string | null, ProjectTotals>();
+    for (const s of sessions) {
+      const p = by.get(s.project) ?? { project: s.project, agents: [], sessions: 0, last_ms: 0, totals: zero, cost: null };
+      by.set(s.project, {
+        ...p,
+        agents: p.agents.includes(s.agent) ? p.agents : [...p.agents, s.agent],
+        sessions: p.sessions + 1,
+        last_ms: Math.max(p.last_ms, s.last_ms),
+        totals: add(p.totals, s.totals),
+        cost: s.cost === null ? p.cost : (p.cost ?? 0) + s.cost,
+      });
+    }
+    return [...by.values()].sort((a, b) => b.totals.cache_read - a.totals.cache_read);
+  },
   get_agents: (): AgentInfo[] => [
     {
       id: "claude-code",

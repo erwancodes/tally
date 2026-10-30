@@ -1,7 +1,7 @@
 //! Commands exposed to the front.
 
 use crate::settings::Settings;
-use crate::store::{DayStat, ModelTotals, Summary};
+use crate::store::{DayStat, ModelTotals, ProjectTotals, SessionTotals, Summary};
 use crate::AppState;
 use serde::Serialize;
 use std::sync::Arc;
@@ -63,6 +63,19 @@ pub fn get_overview(state: State<Arc<AppState>>) -> Res<Overview> {
 #[tauri::command]
 pub fn get_models(state: State<Arc<AppState>>) -> Res<Vec<ModelTotals>> {
     state.store.lock().models().map_err(err)
+}
+
+/// Sessions active in the last `days` days, most recent first, at most `limit`.
+#[tauri::command]
+pub fn get_sessions(days: u32, limit: usize, state: State<Arc<AppState>>) -> Res<Vec<SessionTotals>> {
+    let mut rows = state.store.lock().sessions(crate::store::days_ago_ms(days), &enabled_agents(&state)).map_err(err)?;
+    rows.truncate(limit.clamp(1, 1000));
+    Ok(rows)
+}
+
+#[tauri::command]
+pub fn get_projects(days: u32, state: State<Arc<AppState>>) -> Res<Vec<ProjectTotals>> {
+    state.store.lock().projects(crate::store::days_ago_ms(days), &enabled_agents(&state)).map_err(err)
 }
 
 #[tauri::command]

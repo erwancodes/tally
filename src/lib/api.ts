@@ -8,7 +8,25 @@ export type Period = { totals: Totals; previous: Totals; by_agent: AgentTotals[]
 export type Summary = { today: Period; week: Period; month: Period };
 export type DayStat = { day: string; by_agent: AgentTotals[] };
 export type Overview = { summary: Summary; daily: DayStat[]; include_cache: boolean; scanning: boolean };
-export type ModelTotals = { agent: string; model: string; totals: Totals; last_seen_ms: number };
+export type ModelTotals = { agent: string; model: string; totals: Totals; last_seen_ms: number; cost: number | null };
+export type SessionTotals = {
+  agent: string;
+  session: string;
+  project: string | null;
+  models: string[];
+  first_ms: number;
+  last_ms: number;
+  totals: Totals;
+  cost: number | null;
+};
+export type ProjectTotals = {
+  project: string | null;
+  agents: string[];
+  sessions: number;
+  last_ms: number;
+  totals: Totals;
+  cost: number | null;
+};
 export type AgentInfo = {
   id: string;
   name: string;
@@ -32,6 +50,8 @@ export const api = {
   overview: () => call<Overview>("get_overview"),
   daily: (days: number) => call<DayStat[]>("get_daily", { days }),
   models: () => call<ModelTotals[]>("get_models"),
+  sessions: (days: number, limit: number) => call<SessionTotals[]>("get_sessions", { days, limit }),
+  projects: (days: number) => call<ProjectTotals[]>("get_projects", { days }),
   agents: () => call<AgentInfo[]>("get_agents"),
   refresh: () => call<void>("refresh"),
   settings: () => call<Settings>("get_settings"),

@@ -55,6 +55,7 @@ fn parse_line(line: &str, session: &str) -> Option<UsageEvent> {
         cache_read: num(usage, "input_cache_read"),
         cache_write: num(usage, "input_cache_creation"),
         project: None,
+        session: Some(session.to_string()),
     })
 }
 
@@ -69,6 +70,7 @@ mod tests {
         assert_eq!(events.len(), 3);
         let first = &events[0];
         assert_eq!(first.id, "chatcmpl-1");
+        assert_eq!(first.session.as_deref(), Some("s1"));
         assert_eq!((first.input, first.output, first.cache_read, first.cache_write), (1200, 340, 8000, 0));
         assert_eq!(first.timestamp.timestamp_millis(), 1793300000500);
         // No message_id: keyed by session and timestamp.

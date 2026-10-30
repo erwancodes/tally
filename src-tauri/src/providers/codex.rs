@@ -121,6 +121,7 @@ impl FileState {
             cache_read: cached,
             cache_write: num(usage, "cache_write_input_tokens"),
             project: self.project.clone(),
+            session: Some(self.file_key.clone()),
         })
     }
 }

@@ -4,6 +4,7 @@ import { Sidebar, type View } from "./components/Sidebar";
 import { Overview } from "./components/Overview";
 import { Agents } from "./components/Agents";
 import { History } from "./components/History";
+import { Sessions } from "./components/Sessions";
 import { SettingsView } from "./components/Settings";
 import { useOverview } from "./lib/useOverview";
 
@@ -19,6 +20,7 @@ export function App() {
         <main className="min-w-0 flex-1 overflow-y-auto px-8 pt-4 pb-8">
           {view === "overview" && <Overview data={data} onSettings={() => setView("settings")} />}
           {view === "agents" && <Agents data={data} />}
+          {view === "sessions" && <Sessions data={data} />}
           {view === "history" && <History data={data} />}
           {view === "settings" && <SettingsView onChanged={data.reload} />}
         </main>

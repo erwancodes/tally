@@ -27,8 +27,8 @@ export function History({ data }: { data: OverviewState }) {
       <div className="flex items-center justify-between">
         <h1 className="text-[22px] font-semibold tracking-tight">History</h1>
         <div className="flex gap-2">
-          <Segmented options={[{ id: null, label: "Tous" }, ...agents.map((a) => ({ id: a, label: agentName(a) }))]} value={filter} onChange={setFilter} />
-          <Segmented options={RANGES.map((r) => ({ id: r, label: `${r} j` }))} value={days} onChange={setDays} />
+          <Segmented options={[{ id: null, label: "All" }, ...agents.map((a) => ({ id: a, label: agentName(a) }))]} value={filter} onChange={setFilter} />
+          <Segmented options={RANGES.map((r) => ({ id: r, label: `${r}d` }))} value={days} onChange={setDays} />
         </div>
       </div>
       <div className="rise rounded-2xl bg-panel p-2">

@@ -31,6 +31,8 @@ pub struct UsageEvent {
     pub cache_read: u64,
     pub cache_write: u64,
     pub project: Option<String>,
+    /// Agent session or conversation id.
+    pub session: Option<String>,
 }
 
 pub trait Provider: Send + Sync {

@@ -1,5 +1,6 @@
 mod commands;
 mod format;
+mod pricing;
 mod providers;
 mod settings;
 mod store;
@@ -106,6 +107,8 @@ pub fn run() {
             commands::get_daily,
             commands::get_overview,
             commands::get_models,
+            commands::get_sessions,
+            commands::get_projects,
             commands::get_agents,
             commands::refresh,
             commands::get_settings,

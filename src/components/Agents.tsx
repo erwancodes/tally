@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { api, sum, type ModelTotals } from "../lib/api";
 import { agentColor, agentName } from "../lib/agents";
-import { ago, compact } from "../lib/format";
+import { ago, compact, money } from "../lib/format";
 import type { OverviewState } from "../lib/useOverview";
 
 export function Agents({ data }: { data: OverviewState }) {
@@ -43,6 +43,7 @@ export function Agents({ data }: { data: OverviewState }) {
                   <th className="pb-2 text-right font-normal">Output</th>
                   {cache && <th className="pb-2 text-right font-normal">Cache</th>}
                   <th className="pb-2 text-right font-normal">Total</th>
+                  <th className="pb-2 text-right font-normal" title="At API list prices">Est. cost</th>
                   <th className="pb-2 text-right font-normal">Last used</th>
                 </tr>
               </thead>
@@ -59,6 +60,7 @@ export function Agents({ data }: { data: OverviewState }) {
                       <td className="py-2 text-right">{compact(m.totals.output)}</td>
                       {cache && <td className="py-2 text-right">{compact(m.totals.cache_read + m.totals.cache_write)}</td>}
                       <td className="py-2 text-right font-medium">{compact(t)}</td>
+                      <td className="py-2 text-right">{m.cost === null ? <span className="text-ink-3">n/a</span> : money(m.cost)}</td>
                       <td className="rounded-r-lg py-2 pr-2 text-right text-ink-2">{ago(m.last_seen_ms)}</td>
                     </tr>
                   );

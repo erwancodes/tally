@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { api, onEvent } from "../lib/api";
 
-export type View = "overview" | "agents" | "history" | "settings";
+export type View = "overview" | "agents" | "sessions" | "history" | "settings";
 
 const ITEMS: { id: View; label: string; icon: React.ReactNode }[] = [
   {
@@ -17,6 +17,16 @@ const ITEMS: { id: View; label: string; icon: React.ReactNode }[] = [
         <circle cx="5" cy="6" r="2.5" />
         <circle cx="11" cy="6" r="2.5" />
         <path d="M1.5 13c.5-2 2-3 3.5-3s3 1 3.5 3M7.5 13c.5-2 2-3 3.5-3s3 1 3.5 3" />
+      </>
+    ),
+  },
+  {
+    id: "sessions",
+    label: "Sessions",
+    icon: (
+      <>
+        <rect x="2" y="2.5" width="12" height="11" rx="2" />
+        <path d="M2 6h12M5 9h3M5 11h5" />
       </>
     ),
   },

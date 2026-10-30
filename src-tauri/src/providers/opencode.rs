@@ -55,7 +55,12 @@ impl Provider for OpenCode {
             return Ok((read_db(path)?, 0));
         }
         let v: Value = serde_json::from_slice(&std::fs::read(path)?)?;
-        Ok((parse_message(&v).into_iter().collect(), 0))
+        let mut event = parse_message(&v);
+        // Legacy files sit in `message/<session>/`.
+        if let Some(e) = event.as_mut().filter(|e| e.session.is_none()) {
+            e.session = path.parent().and_then(Path::file_name).map(|s| s.to_string_lossy().into_owned());
+        }
+        Ok((event.into_iter().collect(), 0))
     }
 }
 
@@ -64,7 +69,8 @@ fn read_db(path: &Path) -> Result<Vec<UsageEvent>> {
     // Pull only the fields we need, so large message blobs never reach Rust.
     let mut stmt = conn.prepare(
         "SELECT json_object('id', id, 'role', json_extract(data, '$.role'), 'tokens', json_extract(data, '$.tokens'),
-                'modelID', json_extract(data, '$.modelID'), 'time', json_extract(data, '$.time'), 'path', json_extract(data, '$.path'))
+                'modelID', json_extract(data, '$.modelID'), 'time', json_extract(data, '$.time'), 'path', json_extract(data, '$.path'),
+                'session', session_id)
          FROM message WHERE json_extract(data, '$.role') = 'assistant' AND json_extract(data, '$.time.completed') IS NOT NULL",
     )?;
     let rows = stmt.query_map([], |r| r.get::<_, String>(0))?;
@@ -90,6 +96,7 @@ fn parse_message(v: &Value) -> Option<UsageEvent> {
         cache_read: n(&cache, "read"),
         cache_write: n(&cache, "write"),
         project: project_name(v.get("path").and_then(|p| p.get("cwd")).and_then(Value::as_str)),
+        session: v.get("session").or_else(|| v.get("sessionID")).and_then(Value::as_str).map(str::to_string),
     };
     (event.input + event.output + event.cache_read + event.cache_write > 0).then_some(event)
 }
@@ -126,6 +133,7 @@ mod tests {
         assert_eq!((e.input, e.output, e.cache_read, e.cache_write), (100, 25, 300, 40));
         assert_eq!(e.model.as_deref(), Some("claude-sonnet-5-5"));
         assert_eq!(e.project.as_deref(), Some("demo"));
+        assert_eq!(e.session.as_deref(), Some("s"));
         let _ = std::fs::remove_dir_all(&dir);
     }
 
@@ -136,6 +144,7 @@ mod tests {
         let (events, _) = OpenCode.parse_file(&path, 0).unwrap();
         assert_eq!(events.len(), 1);
         assert_eq!(events[0].id, "msg_1");
+        assert_eq!(events[0].session.as_deref(), Some("ses_1"));
         assert_eq!((events[0].input, events[0].output, events[0].cache_read), (1046, 164, 25452));
     }
 

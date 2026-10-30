@@ -22,12 +22,13 @@ impl Provider for ClaudeCode {
 
     fn parse_file(&self, path: &Path, from_offset: u64) -> Result<(Vec<UsageEvent>, u64)> {
         let (lines, offset) = read_lines(path, from_offset)?;
-        let events = lines.iter().filter_map(|l| parse_line(l)).collect();
+        let stem = path.file_stem().map(|s| s.to_string_lossy().into_owned());
+        let events = lines.iter().filter_map(|l| parse_line(l, stem.as_deref())).collect();
         Ok((events, offset))
     }
 }
 
-fn parse_line(line: &str) -> Option<UsageEvent> {
+fn parse_line(line: &str, file_session: Option<&str>) -> Option<UsageEvent> {
     // Cheap pre-filter: most lines are tool output without usage.
     if !line.contains("\"usage\"") {
         return None;
@@ -48,6 +49,7 @@ fn parse_line(line: &str) -> Option<UsageEvent> {
         cache_read: num(usage, "cache_read_input_tokens"),
         cache_write: num(usage, "cache_creation_input_tokens"),
         project: project_name(v.get("cwd").and_then(Value::as_str)),
+        session: v.get("sessionId").and_then(Value::as_str).or(file_session).map(str::to_string),
     })
 }
 
@@ -67,6 +69,7 @@ mod tests {
         assert_eq!(first.agent, "claude-code");
         assert_eq!(first.model.as_deref(), Some("claude-opus-5-5"));
         assert_eq!(first.project.as_deref(), Some("demo"));
+        assert!(first.session.is_some());
         assert_eq!((first.input, first.output), (2, 516));
         assert_eq!((first.cache_read, first.cache_write), (50328, 37109));
     }
