@@ -28,7 +28,13 @@ export function useOverview(): OverviewState {
       onEvent("usage-updated", reload),
       onEvent<ScanProgress>("scan-progress", setProgress),
     ];
-    return () => offs.forEach((off) => off());
+    // The window may have been hidden across midnight.
+    const onVisible = () => document.visibilityState === "visible" && reload();
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      offs.forEach((off) => off());
+      document.removeEventListener("visibilitychange", onVisible);
+    };
   }, [reload]);
 
   return { overview, updatedAt, progress, reload };

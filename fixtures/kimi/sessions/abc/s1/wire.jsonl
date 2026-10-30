@@ -1,0 +1,7 @@
+{"type": "metadata", "protocol_version": "1.4"}
+{"timestamp": 1793299999.0, "message": {"type": "TurnBegin", "payload": {"user_input": "hello"}}}
+{"timestamp": 1793300000.5, "message": {"type": "StatusUpdate", "payload": {"context_usage": 0.04, "token_usage": {"input_other": 1200, "output": 340, "input_cache_read": 8000, "input_cache_creation": 0}, "message_id": "chatcmpl-1"}}}
+{"timestamp": 1793300001.0, "message": {"type": "StatusUpdate", "payload": {"plan_mode": false}}}
+{"timestamp": 1793300050.0, "message": {"type": "StatusUpdate", "payload": {"context_usage": 0.05, "token_usage": {"input_other": 300, "output": 90, "input_cache_read": 9500}, "message_id": "chatcmpl-2"}}}
+{"timestamp": 1793300100.25, "message": {"type": "StatusUpdate", "payload": {"token_usage": {"input_other": 50, "output": 10, "input_cache_read": 0, "input_cache_creation": 0}}}}
+{"timestamp": 1793300101.0, "message": {"type": "TurnEnd", "payload": {}}}

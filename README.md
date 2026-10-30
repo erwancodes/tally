@@ -23,7 +23,7 @@ Tally vit dans la barre des tâches de Windows et compte les tokens que tu conso
 | Claude Code | `~\.claude\projects\**\*.jsonl` | Pris en charge |
 | Codex CLI | `~\.codex\sessions\**\rollout-*.jsonl` | Pris en charge |
 | OpenCode | | Bientôt |
-| Kimi CLI | | Bientôt |
+| Kimi Code | `~\.kimi\sessions\**\wire.jsonl` | Pris en charge |
 
 Ton agent n'y est pas ? [Ajoute-le](docs/ADD_A_PROVIDER.md), c'est un fichier Rust.
 

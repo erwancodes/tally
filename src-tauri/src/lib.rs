@@ -44,6 +44,22 @@ pub fn notify_updated(app: &AppHandle, state: &AppState) {
     let _ = app.emit("usage-updated", ());
 }
 
+/// Re-sends totals when the local date changes, so "today" resets at midnight
+/// even if no agent writes. Polling (not one long sleep) also survives standby.
+fn spawn_day_ticker(app: AppHandle, state: Arc<AppState>) {
+    std::thread::spawn(move || {
+        let mut day = chrono::Local::now().date_naive();
+        loop {
+            std::thread::sleep(std::time::Duration::from_secs(20));
+            let now = chrono::Local::now().date_naive();
+            if now != day {
+                day = now;
+                notify_updated(&app, &state);
+            }
+        }
+    });
+}
+
 pub fn full_rescan(app: AppHandle, state: Arc<AppState>) {
     std::thread::spawn(move || {
         if let Err(e) = state.store.lock().reset() {
@@ -102,6 +118,7 @@ pub fn run() {
                     let _ = w.show();
                 }
             }
+            spawn_day_ticker(handle.clone(), state.clone());
             watcher::spawn(handle, state.clone());
             Ok(())
         })

@@ -3,6 +3,7 @@
 
 mod claude_code;
 mod codex;
+mod kimi;
 
 use anyhow::Result;
 use chrono::{DateTime, Utc};
@@ -13,6 +14,7 @@ use std::path::{Path, PathBuf};
 
 pub use claude_code::ClaudeCode;
 pub use codex::Codex;
+pub use kimi::Kimi;
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct UsageEvent {
@@ -37,7 +39,7 @@ pub trait Provider: Send + Sync {
 }
 
 pub fn registry() -> Vec<Box<dyn Provider>> {
-    vec![Box::new(ClaudeCode), Box::new(Codex)]
+    vec![Box::new(ClaudeCode), Box::new(Codex), Box::new(Kimi)]
 }
 
 pub(crate) fn home() -> PathBuf {

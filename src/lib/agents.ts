@@ -2,6 +2,7 @@
 export const AGENTS: Record<string, { name: string; color: string }> = {
   "claude-code": { name: "Claude Code", color: "var(--claude)" },
   codex: { name: "Codex", color: "var(--codex)" },
+  kimi: { name: "Kimi Code", color: "var(--kimi)" },
 };
 
 export const agentName = (id: string) => AGENTS[id]?.name ?? id;
