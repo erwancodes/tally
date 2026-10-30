@@ -1,13 +1,13 @@
-/// French short format, same rules as `src/lib/format.ts`:
-/// `1 234` under 10k, then `12,3k`, `1,24M`, `1,2B`.
+/// Short format, same rules as `src/lib/format.ts`:
+/// `1,234` under 10k, then `12.3k`, `1.24M`, `1.2B`.
 pub fn compact(n: u64) -> String {
     let f = n as f64;
-    let s = if n < 10_000 {
+    if n < 10_000 {
         let s = n.to_string();
         let mut out = String::new();
         for (i, c) in s.chars().enumerate() {
             if i > 0 && (s.len() - i) % 3 == 0 {
-                out.push('\u{202f}');
+                out.push(',');
             }
             out.push(c);
         }
@@ -18,8 +18,7 @@ pub fn compact(n: u64) -> String {
         format!("{:.2}M", f / 1e6)
     } else {
         format!("{:.1}B", f / 1e9)
-    };
-    s.replace('.', ",")
+    }
 }
 
 #[cfg(test)]
@@ -29,9 +28,9 @@ mod tests {
     #[test]
     fn formats() {
         assert_eq!(compact(999), "999");
-        assert_eq!(compact(1234), "1\u{202f}234");
-        assert_eq!(compact(12_345), "12,3k");
-        assert_eq!(compact(1_240_000), "1,24M");
-        assert_eq!(compact(1_200_000_000), "1,2B");
+        assert_eq!(compact(1234), "1,234");
+        assert_eq!(compact(12_345), "12.3k");
+        assert_eq!(compact(1_240_000), "1.24M");
+        assert_eq!(compact(1_200_000_000), "1.2B");
     }
 }

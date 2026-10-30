@@ -1,14 +1,17 @@
+import { useEffect, useState } from "react";
+import { api, onEvent } from "../lib/api";
+
 export type View = "overview" | "agents" | "history" | "settings";
 
 const ITEMS: { id: View; label: string; icon: React.ReactNode }[] = [
   {
     id: "overview",
-    label: "Vue d'ensemble",
+    label: "Overview",
     icon: <path d="M2 13V8M6 13V3M10 13V6M14 13V10" />,
   },
   {
     id: "agents",
-    label: "Par agent",
+    label: "By agent",
     icon: (
       <>
         <circle cx="5" cy="6" r="2.5" />
@@ -19,7 +22,7 @@ const ITEMS: { id: View; label: string; icon: React.ReactNode }[] = [
   },
   {
     id: "history",
-    label: "Historique",
+    label: "History",
     icon: (
       <>
         <circle cx="8" cy="8" r="6" />
@@ -29,7 +32,7 @@ const ITEMS: { id: View; label: string; icon: React.ReactNode }[] = [
   },
   {
     id: "settings",
-    label: "Réglages",
+    label: "Settings",
     icon: (
       <>
         <circle cx="8" cy="8" r="2" />
@@ -60,6 +63,42 @@ export function Sidebar({ view, onChange }: { view: View; onChange: (v: View) =>
           </button>
         );
       })}
+      <UpdateCard />
     </nav>
+  );
+}
+
+/** Shows up only when a newer signed release is on GitHub. */
+function UpdateCard() {
+  const [version, setVersion] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    api.update().then((v) => v && setVersion(v));
+    return onEvent<string>("update-available", setVersion);
+  }, []);
+
+  if (!version) return null;
+  const install = () => {
+    setBusy(true);
+    setError(false);
+    api.installUpdate().catch(() => {
+      setBusy(false);
+      setError(true);
+    });
+  };
+  return (
+    <div className="mt-auto mb-4 rounded-lg bg-panel px-3 py-3 text-[12.5px]">
+      <p className="text-ink">Tally {version} is out</p>
+      <p className="mt-0.5 text-ink-3">{error ? "Update failed. Try again." : "Installs and restarts in a few seconds."}</p>
+      <button
+        onClick={install}
+        disabled={busy}
+        className="mt-2.5 h-7 w-full rounded-md bg-ink text-[12.5px] font-medium text-ground transition-opacity hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
+      >
+        {busy ? "Updating…" : "Update now"}
+      </button>
+    </div>
   );
 }

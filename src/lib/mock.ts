@@ -103,6 +103,7 @@ const handlers: Record<string, (args?: Record<string, unknown>) => unknown> = {
     settings = args?.settings as Settings;
   },
   refresh: () => undefined,
+  get_update: () => null,
 };
 
 export async function mock<T>(cmd: string, args?: Record<string, unknown>): Promise<T> {

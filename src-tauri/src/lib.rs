@@ -4,6 +4,7 @@ mod providers;
 mod settings;
 mod store;
 mod tray;
+mod updater;
 mod watcher;
 
 use parking_lot::Mutex;
@@ -38,7 +39,7 @@ pub fn notify_updated(app: &AppHandle, state: &AppState) {
     let include_cache = state.settings.lock().include_cache;
     if let Ok(total) = state.store.lock().today_total(&agents, include_cache) {
         if let Some(tray) = app.tray_by_id(tray::TRAY_ID) {
-            let _ = tray.set_tooltip(Some(format!("Aujourd'hui : {} tokens", format::compact(total))));
+            let _ = tray.set_tooltip(Some(format!("Today: {} tokens", format::compact(total))));
         }
     }
     let _ = app.emit("usage-updated", ());
@@ -97,6 +98,8 @@ pub fn run() {
                 .build(),
         )
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .manage(updater::Pending::default())
         .manage(state.clone())
         .invoke_handler(tauri::generate_handler![
             commands::get_summary,
@@ -107,6 +110,8 @@ pub fn run() {
             commands::refresh,
             commands::get_settings,
             commands::set_settings,
+            updater::get_update,
+            updater::install_update,
         ])
         .setup(move |app| {
             let handle = app.handle().clone();
@@ -119,11 +124,12 @@ pub fn run() {
                 }
             }
             spawn_day_ticker(handle.clone(), state.clone());
+            updater::spawn(handle.clone());
             watcher::spawn(handle, state.clone());
             Ok(())
         })
         .on_window_event(|window, event| {
-            // Closing hides to the tray; "Quitter" in the menu really exits.
+            // Closing hides to the tray; "Quit" in the menu really exits.
             if let WindowEvent::CloseRequested { api, .. } = event {
                 api.prevent_close();
                 let _ = window.hide();

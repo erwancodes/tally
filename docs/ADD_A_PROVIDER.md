@@ -1,42 +1,42 @@
-# Ajouter un agent à Tally
+# Add an agent to Tally
 
-Un agent, c'est un **provider** : un fichier Rust qui lit les journaux de session de l'agent et en sort des `UsageEvent`. Le reste de l'app (base SQLite, watcher, totaux, UI) ne change pas.
+An agent is a **provider**: a Rust file that reads the agent's session logs and turns them into `UsageEvent`s. The rest of the app (SQLite store, watcher, totals, UI) doesn't change.
 
-Compte une heure pour un agent qui écrit du JSONL.
+Count about an hour for an agent that writes JSONL.
 
-## 1. Trouver les fichiers
+## 1. Find the files
 
-Repère où l'agent écrit ses sessions sur Windows et ce qu'une ligne contient. Il te faut au minimum :
+Find where the agent writes its sessions on Windows and what a line holds. At minimum you need:
 
-- un horodatage (RFC 3339) ;
-- les compteurs de tokens (input, output, et le cache s'il existe) ;
-- un identifiant stable par réponse, pour dédoublonner si la même ligne revient.
+- a timestamp (RFC 3339);
+- the token counters (input, output, and cache if it exists);
+- a stable id per response, to dedup if the same line shows up again.
 
-Le modèle et le dossier de travail sont des bonus, l'app les affiche s'ils sont là.
+The model and the working directory are a bonus; the app shows them when they are there.
 
-## 2. Ajouter des fixtures
+## 2. Add fixtures
 
-Copie une vraie session dans `fixtures/<id-agent>/`, puis **nettoie-la** : remplace les prompts, les réponses et les chemins personnels par du texte neutre. Garde les compteurs tels quels.
+Copy a real session into `fixtures/<agent-id>/`, then **scrub it**: replace prompts, answers and personal paths with neutral text. Keep the counters as they are.
 
-Ajoute exprès quelques cas difficiles : une ligne en double, une ligne JSON cassée, une ligne sans usage.
+Add a few hard cases on purpose: a duplicated line, a broken JSON line, a line without usage.
 
-## 3. Écrire le provider
+## 3. Write the provider
 
-Crée `src-tauri/src/providers/<id_agent>.rs` :
+Create `src-tauri/src/providers/<agent_id>.rs`:
 
 ```rust
 use super::{home, num, parse_ts, project_name, read_lines, Provider, UsageEvent};
 use anyhow::Result;
 use std::path::{Path, PathBuf};
 
-pub struct MonAgent;
+pub struct MyAgent;
 
-impl Provider for MonAgent {
-    fn id(&self) -> &'static str { "mon-agent" }
-    fn display_name(&self) -> &'static str { "Mon Agent" }
+impl Provider for MyAgent {
+    fn id(&self) -> &'static str { "my-agent" }
+    fn display_name(&self) -> &'static str { "My Agent" }
 
     fn default_paths(&self) -> Vec<PathBuf> {
-        vec![home().join(".mon-agent").join("sessions")]
+        vec![home().join(".my-agent").join("sessions")]
     }
 
     fn parse_file(&self, path: &Path, from_offset: u64) -> Result<(Vec<UsageEvent>, u64)> {
@@ -61,52 +61,54 @@ impl Provider for MonAgent {
 }
 ```
 
-Les helpers du module `providers` font le gros du travail :
+The `providers` module helpers do the heavy lifting:
 
-| Helper | Rôle |
+| Helper | Role |
 | --- | --- |
-| `read_lines(path, offset)` | Lit les lignes complètes depuis `offset` et laisse de côté une dernière ligne pas encore finie. |
-| `parse_ts(value)` | Convertit un horodatage RFC 3339 en `DateTime<Utc>`. |
-| `num(value, key)` | Lit un compteur, 0 s'il manque. |
-| `project_name(cwd)` | Garde le nom du dernier dossier comme projet. |
+| `read_lines(path, offset)` | Reads complete lines from `offset` and leaves out a last line that isn't finished yet. |
+| `parse_ts(value)` | Turns an RFC 3339 timestamp into a `DateTime<Utc>`. |
+| `num(value, key)` | Reads a counter, 0 when missing. |
+| `project_name(cwd)` | Keeps the last folder name as the project. |
 
-Règles :
+If the agent doesn't write JSONL, override `source()` to pick the files to read (see `opencode.rs`, which reads a SQLite database).
 
-- **Lecture seule.** Ne modifie jamais les fichiers de l'agent.
-- **Ne plante jamais sur une ligne.** Une ligne illisible est ignorée.
-- **`id` unique par agent.** La base dédoublonne dessus, donc relire un fichier ne compte rien deux fois.
-- **Input sans le cache.** Si l'agent inclut le cache dans l'input, soustrais-le.
+Rules:
 
-## 4. L'enregistrer
+- **Read only.** Never change the agent's files.
+- **Never crash on a line.** An unreadable line is skipped.
+- **`id` unique per agent.** The store dedups on it, so rereading a file never counts anything twice.
+- **Input without cache.** If the agent includes cache in input, subtract it.
 
-Dans `src-tauri/src/providers/mod.rs` :
+## 4. Register it
+
+In `src-tauri/src/providers/mod.rs`:
 
 ```rust
-mod mon_agent;
-pub use mon_agent::MonAgent;
+mod my_agent;
+pub use my_agent::MyAgent;
 
 pub fn registry() -> Vec<Box<dyn Provider>> {
-    vec![Box::new(ClaudeCode), Box::new(Codex), Box::new(MonAgent)]
+    vec![Box::new(ClaudeCode), Box::new(Codex), Box::new(MyAgent)]
 }
 ```
 
-Côté front, ajoute sa couleur et son nom dans `src/lib/agents.ts`.
+On the front end, add its colour and name in `src/lib/agents.ts`.
 
-## 5. Tester
+## 5. Test
 
-Ajoute un module `tests` dans ton fichier, sur le modèle de `claude_code.rs` :
+Add a `tests` module to your file, modelled on `claude_code.rs`:
 
-- les compteurs de la première ligne sont les bons ;
-- les doublons partagent le même `id` ;
-- une reprise depuis un offset ne relit rien.
+- the first line's counters are right;
+- duplicates share the same `id`;
+- resuming from an offset rereads nothing.
 
 ```bash
 cd src-tauri
 cargo test
 ```
 
-Puis lance l'app avec `npm run tauri dev` et vérifie que l'agent apparaît dans la vue Agents.
+Then run the app with `npm run tauri dev` and check that the agent shows up in the By agent view.
 
-## 6. Ouvrir la PR
+## 6. Open the PR
 
-Dis dans la description où l'agent écrit ses fichiers et avec quelle version tu as testé.
+Say in the description where the agent writes its files and which version you tested with.

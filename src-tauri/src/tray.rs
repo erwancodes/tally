@@ -17,10 +17,10 @@ pub fn show_main(app: &AppHandle) {
 
 pub fn build(app: &AppHandle, state: Arc<AppState>) -> tauri::Result<TrayIcon> {
     let autostart_on = app.autolaunch().is_enabled().unwrap_or(false);
-    let open = MenuItem::with_id(app, "open", "Ouvrir", true, None::<&str>)?;
-    let refresh = MenuItem::with_id(app, "refresh", "Rafraîchir", true, None::<&str>)?;
-    let autostart = CheckMenuItem::with_id(app, "autostart", "Lancer au démarrage", true, autostart_on, None::<&str>)?;
-    let quit = MenuItem::with_id(app, "quit", "Quitter", true, None::<&str>)?;
+    let open = MenuItem::with_id(app, "open", "Open", true, None::<&str>)?;
+    let refresh = MenuItem::with_id(app, "refresh", "Refresh", true, None::<&str>)?;
+    let autostart = CheckMenuItem::with_id(app, "autostart", "Launch at startup", true, autostart_on, None::<&str>)?;
+    let quit = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
     let sep = PredefinedMenuItem::separator(app)?;
     let menu = Menu::with_items(app, &[&open, &refresh, &autostart, &sep, &quit])?;
 

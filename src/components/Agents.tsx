@@ -19,8 +19,8 @@ export function Agents({ data }: { data: OverviewState }) {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-[22px] font-semibold tracking-tight">Par agent</h1>
-      {byAgent.size === 0 && <p className="text-ink-2">Aucune donnée pour l'instant.</p>}
+      <h1 className="text-[22px] font-semibold tracking-tight">By agent</h1>
+      {byAgent.size === 0 && <p className="text-ink-2">No data yet.</p>}
       {[...byAgent].map(([agent, list], i) => {
         const total = list.reduce((s, m) => s + sum(m.totals, cache), 0);
         const sorted = [...list].sort((a, b) => sum(b.totals, cache) - sum(a.totals, cache));
@@ -32,18 +32,18 @@ export function Agents({ data }: { data: OverviewState }) {
                 {agentName(agent)}
               </h2>
               <div className="num text-[13px] text-ink-2">
-                {compact(month.get(agent) ?? 0)} ce mois · {compact(total)} au total
+                {compact(month.get(agent) ?? 0)} this month · {compact(total)} all time
               </div>
             </div>
             <table className="w-full text-[13px]">
               <thead className="text-left text-ink-3">
                 <tr>
-                  <th className="pb-2 font-normal">Modèle</th>
+                  <th className="pb-2 font-normal">Model</th>
                   <th className="pb-2 text-right font-normal">Input</th>
                   <th className="pb-2 text-right font-normal">Output</th>
                   {cache && <th className="pb-2 text-right font-normal">Cache</th>}
                   <th className="pb-2 text-right font-normal">Total</th>
-                  <th className="pb-2 text-right font-normal">Dernière utilisation</th>
+                  <th className="pb-2 text-right font-normal">Last used</th>
                 </tr>
               </thead>
               <tbody className="num">

@@ -36,6 +36,8 @@ export const api = {
   refresh: () => call<void>("refresh"),
   settings: () => call<Settings>("get_settings"),
   setSettings: (settings: Settings) => call<void>("set_settings", { settings }),
+  update: () => call<string | null>("get_update"),
+  installUpdate: () => call<void>("install_update"),
 };
 
 export function onEvent<T>(name: string, fn: (payload: T) => void): () => void {

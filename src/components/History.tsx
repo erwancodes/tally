@@ -25,19 +25,19 @@ export function History({ data }: { data: OverviewState }) {
   return (
     <div className="flex flex-col gap-5">
       <div className="flex items-center justify-between">
-        <h1 className="text-[22px] font-semibold tracking-tight">Historique</h1>
+        <h1 className="text-[22px] font-semibold tracking-tight">History</h1>
         <div className="flex gap-2">
           <Segmented options={[{ id: null, label: "Tous" }, ...agents.map((a) => ({ id: a, label: agentName(a) }))]} value={filter} onChange={setFilter} />
           <Segmented options={RANGES.map((r) => ({ id: r, label: `${r} j` }))} value={days} onChange={setDays} />
         </div>
       </div>
       <div className="rise rounded-2xl bg-panel p-2">
-        {list.length === 0 && <p className="p-4 text-ink-2">Aucune activité sur cette période.</p>}
+        {list.length === 0 && <p className="p-4 text-ink-2">No activity in this period.</p>}
         <table className="w-full text-[13px]">
           {list.length > 0 && (
             <thead className="text-left text-ink-3">
               <tr>
-                <th className="px-3 py-2 font-normal">Jour</th>
+                <th className="px-3 py-2 font-normal">Day</th>
                 <th className="py-2 font-normal">Agents</th>
                 <th className="py-2 text-right font-normal">Input</th>
                 <th className="py-2 text-right font-normal">Output</th>

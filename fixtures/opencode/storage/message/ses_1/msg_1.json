@@ -1,0 +1,11 @@
+{
+  "id": "msg_1",
+  "sessionID": "ses_1",
+  "role": "assistant",
+  "modelID": "claude-sonnet-5-5",
+  "providerID": "anthropic",
+  "path": { "cwd": "C:\\dev\\demo", "root": "C:\\dev\\demo" },
+  "time": { "created": 1793300000000, "completed": 1793300004000 },
+  "tokens": { "input": 1046, "output": 150, "reasoning": 14, "cache": { "read": 25452, "write": 0 } },
+  "cost": 0
+}

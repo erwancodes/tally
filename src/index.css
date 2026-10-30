@@ -12,6 +12,7 @@
   --ink-3: #6d6d78;
   --claude: #8fd3a8;
   --codex: #a99cf2;
+  --opencode: #7cc4e8;
   --kimi: #f0c27a;
   --up: #8fd3a8;
   --down: #f0a08f;
@@ -28,6 +29,7 @@
   --color-ink-3: var(--ink-3);
   --color-claude: var(--claude);
   --color-codex: var(--codex);
+  --color-opencode: var(--opencode);
   --color-kimi: var(--kimi);
   --color-up: var(--up);
   --color-down: var(--down);

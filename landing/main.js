@@ -4,10 +4,10 @@ const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 
-// Same rules as the app: "1 234" under 10k, then 12,3k, 1,24M.
+// Same rules as the app: "1,234" under 10k, then 12.3k, 1.24M.
 function compact(n) {
-  const fmt = (v, d) => v.toFixed(d).replace(".", ",").replace(/,0+$/, "");
-  if (n < 10_000) return Math.round(n).toLocaleString("fr-FR");
+  const fmt = (v, d) => v.toFixed(d).replace(/\.0+$/, "");
+  if (n < 10_000) return Math.round(n).toLocaleString("en-US");
   if (n < 1_000_000) return fmt(n / 1e3, n < 100_000 ? 1 : 0) + "k";
   if (n < 1e9) return fmt(n / 1e6, n < 10e6 ? 2 : 1) + "M";
   return fmt(n / 1e9, 1) + "B";
@@ -64,8 +64,8 @@ $$(".hero .stroke").forEach((el, i) => el.style.setProperty("--d", `${200 + i * 
 // The clock in the taskbar is the visitor's own.
 function tick() {
   const now = new Date();
-  $$("[data-clock]").forEach((el) => (el.textContent = now.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })));
-  $$("[data-date]").forEach((el) => (el.textContent = now.toLocaleDateString("fr-FR")));
+  $$("[data-clock]").forEach((el) => (el.textContent = now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })));
+  $$("[data-date]").forEach((el) => (el.textContent = now.toLocaleDateString("en-US")));
 }
 tick();
 setInterval(tick, 15_000);

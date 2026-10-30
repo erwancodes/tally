@@ -4,6 +4,7 @@
 mod claude_code;
 mod codex;
 mod kimi;
+mod opencode;
 
 use anyhow::Result;
 use chrono::{DateTime, Utc};
@@ -11,10 +12,12 @@ use serde::Serialize;
 use std::fs::File;
 use std::io::{BufRead, BufReader, Seek, SeekFrom};
 use std::path::{Path, PathBuf};
+use walkdir::WalkDir;
 
 pub use claude_code::ClaudeCode;
 pub use codex::Codex;
 pub use kimi::Kimi;
+pub use opencode::OpenCode;
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct UsageEvent {
@@ -36,10 +39,25 @@ pub trait Provider: Send + Sync {
     fn default_paths(&self) -> Vec<PathBuf>;
     /// Parses `path` from `from_offset`, returns the events and the offset to resume from.
     fn parse_file(&self, path: &Path, from_offset: u64) -> Result<(Vec<UsageEvent>, u64)>;
+
+    /// The file to parse when `path` changes, or `None` to ignore it. JSONL by default.
+    fn source(&self, path: &Path) -> Option<PathBuf> {
+        path.extension().is_some_and(|x| x == "jsonl").then(|| path.to_path_buf())
+    }
+
+    /// Every file to parse under `root`.
+    fn files(&self, root: &Path) -> Vec<PathBuf> {
+        WalkDir::new(root)
+            .into_iter()
+            .filter_map(Result::ok)
+            .filter(|e| e.file_type().is_file())
+            .filter_map(|e| self.source(e.path()))
+            .collect()
+    }
 }
 
 pub fn registry() -> Vec<Box<dyn Provider>> {
-    vec![Box::new(ClaudeCode), Box::new(Codex), Box::new(Kimi)]
+    vec![Box::new(ClaudeCode), Box::new(Codex), Box::new(OpenCode), Box::new(Kimi)]
 }
 
 pub(crate) fn home() -> PathBuf {

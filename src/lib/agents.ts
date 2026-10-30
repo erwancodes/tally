@@ -2,6 +2,7 @@
 export const AGENTS: Record<string, { name: string; color: string }> = {
   "claude-code": { name: "Claude Code", color: "var(--claude)" },
   codex: { name: "Codex", color: "var(--codex)" },
+  opencode: { name: "OpenCode", color: "var(--opencode)" },
   kimi: { name: "Kimi Code", color: "var(--kimi)" },
 };
 

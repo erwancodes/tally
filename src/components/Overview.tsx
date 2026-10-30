@@ -21,9 +21,9 @@ export function Overview({ data, onSettings }: { data: OverviewState; onSettings
       </div>
 
       <div className="grid grid-cols-3 gap-3">
-        <StatCard label="Aujourd'hui" hint="vs hier à la même heure" period={overview.summary.today} cache={cache} delay={0} />
-        <StatCard label="7 derniers jours" hint="vs les 7 précédents" period={overview.summary.week} cache={cache} delay={60} />
-        <StatCard label="Ce mois" hint="vs le mois dernier" period={overview.summary.month} cache={cache} delay={120} />
+        <StatCard label="Today" hint="vs yesterday at the same time" period={overview.summary.today} cache={cache} delay={0} />
+        <StatCard label="Last 7 days" hint="vs the previous 7" period={overview.summary.week} cache={cache} delay={60} />
+        <StatCard label="This month" hint="vs last month" period={overview.summary.month} cache={cache} delay={120} />
       </div>
 
       <section className="rise rounded-2xl bg-panel p-5" style={{ animationDelay: "180ms" }}>
@@ -36,11 +36,11 @@ export function Overview({ data, onSettings }: { data: OverviewState; onSettings
 
       <div className="grid grid-cols-[1fr_1.4fr] gap-3">
         <section className="rise rounded-2xl bg-panel p-5" style={{ animationDelay: "240ms" }}>
-          <h2 className="mb-2 text-[15px] font-medium">Ce mois par agent</h2>
+          <h2 className="mb-2 text-[15px] font-medium">This month by agent</h2>
           <Donut period={overview.summary.month} cache={cache} />
         </section>
         <section className="rise rounded-2xl bg-panel p-5" style={{ animationDelay: "300ms" }}>
-          <h2 className="mb-4 text-[15px] font-medium">Répartition du mois</h2>
+          <h2 className="mb-4 text-[15px] font-medium">This month breakdown</h2>
           <Split period={overview.summary.month} cache={cache} />
         </section>
       </div>
@@ -90,7 +90,7 @@ function StatCard({ label, hint, period, cache, delay }: { label: string; hint: 
       <div className="num mt-2 text-[32px] leading-none font-semibold tracking-tight">{compact(shown)}</div>
       <div className="mt-3 flex items-center gap-2 text-[12.5px]">
         {v === null ? (
-          <span className="text-ink-3">Rien à comparer</span>
+          <span className="text-ink-3">Nothing to compare</span>
         ) : (
           <>
             <span className={`num rounded-md px-1.5 py-0.5 ${v >= 0 ? "bg-up/12 text-up" : "bg-down/12 text-down"}`}>{percent(v)}</span>
@@ -121,7 +121,7 @@ function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: 
   return (
     <div className="rounded-lg bg-panel-3 px-3 py-2 text-[12.5px]">
       <div className="mb-1 text-ink-2 capitalize">{formatDay(label)}</div>
-      {rows.length === 0 && <div className="text-ink-3">Aucune activité</div>}
+      {rows.length === 0 && <div className="text-ink-3">No activity</div>}
       {rows.map((p) => (
         <div key={p.dataKey} className="flex items-center justify-between gap-6">
           <span className="flex items-center gap-1.5">
@@ -197,7 +197,7 @@ function Donut({ period, cache }: { period: Period; cache: boolean }) {
               <span className="size-2 rounded-full" style={{ background: agentColor(r.agent) }} />
               {agentName(r.agent)}
             </span>
-            <span className="num text-ink-2">{total ? Math.round((r.value / total) * 100) : 0}&#8239;%</span>
+            <span className="num text-ink-2">{total ? Math.round((r.value / total) * 100) : 0}%</span>
           </li>
         ))}
       </ul>
@@ -212,8 +212,8 @@ function Split({ period, cache }: { period: Period; cache: boolean }) {
     { label: "Output", value: t.output, color: "var(--codex)" },
     ...(cache
       ? [
-          { label: "Cache lu", value: t.cache_read, color: "#5f8f71" },
-          { label: "Cache écrit", value: t.cache_write, color: "#7468a8" },
+          { label: "Cache read", value: t.cache_read, color: "#5f8f71" },
+          { label: "Cache write", value: t.cache_write, color: "#7468a8" },
         ]
       : []),
   ];
@@ -233,7 +233,7 @@ function Split({ period, cache }: { period: Period; cache: boolean }) {
               {p.label}
             </span>
             <span className="num">
-              {compact(p.value)} <span className="text-ink-3">· {Math.round((p.value / total) * 100)}&#8239;%</span>
+              {compact(p.value)} <span className="text-ink-3">· {Math.round((p.value / total) * 100)}%</span>
             </span>
           </div>
         ))}
@@ -254,13 +254,13 @@ function Updated({ at, progress }: { at: number; progress: OverviewState["progre
         Analyse {progress.done}/{progress.total} fichiers
       </span>
     );
-  return <span className="text-[12.5px] text-ink-3">Mis à jour {ago(at, now)}</span>;
+  return <span className="text-[12.5px] text-ink-3">Updated {ago(at, now)}</span>;
 }
 
 function Scanning({ progress }: { progress: OverviewState["progress"] }) {
   return (
     <div className="grid h-full place-items-center text-ink-2">
-      {progress ? `Analyse ${progress.done}/${progress.total} fichiers…` : "Chargement…"}
+      {progress ? `Scanning ${progress.done}/${progress.total} files…` : "Loading…"}
     </div>
   );
 }
@@ -269,9 +269,9 @@ function Empty({ onSettings }: { onSettings: () => void }) {
   return (
     <div className="grid h-full place-items-center">
       <div className="flex flex-col items-center gap-4 text-center">
-        <p className="text-[15px] text-ink-2">Aucun agent détecté. Vérifie les chemins dans ⚙.</p>
+        <p className="text-[15px] text-ink-2">No agent detected. Check the paths in ⚙.</p>
         <button onClick={onSettings} className="rounded-lg bg-panel-2 px-4 py-2 text-[13px] transition-colors hover:bg-panel-3 active:scale-[0.98]">
-          Ouvrir les réglages
+          Open settings
         </button>
       </div>
     </div>

@@ -11,7 +11,6 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::{Duration, UNIX_EPOCH};
 use tauri::{AppHandle, Emitter};
-use walkdir::WalkDir;
 
 #[derive(Clone, serde::Serialize)]
 pub struct ScanProgress {
@@ -19,19 +18,21 @@ pub struct ScanProgress {
     pub total: usize,
 }
 
-fn jsonl_files(root: &Path) -> Vec<PathBuf> {
-    WalkDir::new(root)
-        .into_iter()
-        .filter_map(Result::ok)
-        .filter(|e| e.file_type().is_file() && e.path().extension().is_some_and(|x| x == "jsonl"))
-        .map(|e| e.into_path())
-        .collect()
-}
-
-fn stat(path: &Path) -> Option<(u64, i64)> {
+fn stat_one(path: &Path) -> Option<(u64, i64)> {
     let m = std::fs::metadata(path).ok()?;
     let mtime = m.modified().ok()?.duration_since(UNIX_EPOCH).ok()?.as_millis() as i64;
     Some((m.len(), mtime))
+}
+
+/// Size and mtime, counting a SQLite WAL next to the file: writes land there first.
+fn stat(path: &Path) -> Option<(u64, i64)> {
+    let (size, mtime) = stat_one(path)?;
+    let mut wal = path.as_os_str().to_owned();
+    wal.push("-wal");
+    Some(match stat_one(Path::new(&wal)) {
+        Some((s, m)) => (size + s, mtime.max(m)),
+        None => (size, mtime),
+    })
 }
 
 /// Reads what is new in one file. A file that shrank, or whose mtime went back,
@@ -66,7 +67,7 @@ pub fn enabled_roots(state: &AppState) -> Vec<(usize, PathBuf)> {
 pub fn scan_all(app: &AppHandle, state: &AppState) {
     let mut files = Vec::new();
     for (i, root) in enabled_roots(state) {
-        files.extend(jsonl_files(&root).into_iter().map(|f| (i, f)));
+        files.extend(state.providers[i].files(&root).into_iter().map(|f| (i, f)));
     }
     let total = files.len();
     *state.scanning.lock() = true;
@@ -108,12 +109,9 @@ pub fn spawn(app: AppHandle, state: Arc<AppState>) {
                 let Ok(events) = res else { continue };
                 let mut changed = false;
                 for ev in events {
-                    let path = ev.path;
-                    if path.extension().is_none_or(|x| x != "jsonl") {
-                        continue;
-                    }
-                    if let Some((i, _)) = roots.iter().find(|(_, r)| path.starts_with(r)) {
+                    if let Some((i, _)) = roots.iter().find(|(_, r)| ev.path.starts_with(r)) {
                         let provider = state.providers[*i].as_ref();
+                        let Some(path) = provider.source(&ev.path) else { continue };
                         if let Ok(n) = scan_file(&state.store, provider, &path) {
                             changed |= n > 0;
                         }

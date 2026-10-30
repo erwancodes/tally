@@ -33,12 +33,12 @@ export function SettingsView({ onChanged }: { onChanged: () => void }) {
 
   return (
     <div className="flex max-w-2xl flex-col gap-6">
-      <h1 className="text-[22px] font-semibold tracking-tight">Réglages</h1>
+      <h1 className="text-[22px] font-semibold tracking-tight">Settings</h1>
 
       <section className="rise flex flex-col gap-1 rounded-2xl bg-panel p-2">
-        <Row title="Lancer au démarrage" detail="Tally démarre réduit dans la zone de notification.">
+        <Row title="Launch at startup" detail="Tally starts minimized in the system tray.">
           <Toggle
-            label="Lancer au démarrage"
+            label="Launch at startup"
             on={autostart}
             onChange={async (v) => {
               if (!inTauri) return setAutostart(v);
@@ -47,8 +47,8 @@ export function SettingsView({ onChanged }: { onChanged: () => void }) {
             }}
           />
         </Row>
-        <Row title="Compter le cache" detail="Inclure les tokens lus et écrits dans le cache dans les totaux.">
-          <Toggle label="Compter le cache" on={settings.include_cache} onChange={(v) => save({ ...settings, include_cache: v })} />
+        <Row title="Count cache" detail="Include cache read and write tokens in totals.">
+          <Toggle label="Count cache" on={settings.include_cache} onChange={(v) => save({ ...settings, include_cache: v })} />
         </Row>
       </section>
 
@@ -65,14 +65,14 @@ export function SettingsView({ onChanged }: { onChanged: () => void }) {
 
       <section className="rise flex items-center justify-between rounded-2xl bg-panel p-4">
         <div>
-          <div className="text-[13.5px]">Tout recompter</div>
-          <div className="text-[12.5px] text-ink-3">Vide la base et relit tous les fichiers.</div>
+          <div className="text-[13.5px]">Recount everything</div>
+          <div className="text-[12.5px] text-ink-3">Clears the database and rereads every file.</div>
         </div>
         <button
           onClick={() => api.refresh().then(onChanged)}
           className="rounded-lg bg-panel-2 px-3.5 py-1.5 text-[13px] transition-colors hover:bg-panel-3 active:scale-[0.98]"
         >
-          Rafraîchir
+          Refresh
         </button>
       </section>
     </div>
@@ -90,9 +90,9 @@ function AgentCard({ agent, delay, onToggle, onPath }: { agent: AgentInfo; delay
         <div className="flex items-center gap-2.5">
           <span className="size-2.5 rounded-full" style={{ background: agentColor(agent.id) }} />
           <span className="text-[14px] font-medium">{agent.name}</span>
-          <span className={`rounded-md px-1.5 py-0.5 text-[12px] ${found ? "bg-up/12 text-up" : "bg-panel-3 text-ink-3"}`}>{found ? "Détecté" : "Introuvable"}</span>
+          <span className={`rounded-md px-1.5 py-0.5 text-[12px] ${found ? "bg-up/12 text-up" : "bg-panel-3 text-ink-3"}`}>{found ? "Detected" : "Not found"}</span>
         </div>
-        <Toggle label={`Suivre ${agent.name}`} on={agent.enabled} onChange={onToggle} />
+        <Toggle label={`Track ${agent.name}`} on={agent.enabled} onChange={onToggle} />
       </div>
       <label className="flex flex-col gap-1.5">
         <span className="text-[12.5px] text-ink-2">Dossier</span>

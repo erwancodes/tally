@@ -24,13 +24,13 @@ export function TitleBar() {
       </div>
       {inTauri && (
         <div className="flex">
-          <Button label="Réduire" onClick={() => win().minimize()}>
+          <Button label="Minimize" onClick={() => win().minimize()}>
             <svg width="10" height="10" viewBox="0 0 10 10"><path d="M0 5h10" stroke="currentColor" /></svg>
           </Button>
-          <Button label="Agrandir" onClick={() => win().toggleMaximize()}>
+          <Button label="Maximize" onClick={() => win().toggleMaximize()}>
             <svg width="10" height="10" viewBox="0 0 10 10"><rect x="0.5" y="0.5" width="9" height="9" fill="none" stroke="currentColor" /></svg>
           </Button>
-          <Button label="Fermer" onClick={() => win().close()} danger>
+          <Button label="Close" onClick={() => win().close()} danger>
             <svg width="10" height="10" viewBox="0 0 10 10"><path d="M0 0l10 10M10 0L0 10" stroke="currentColor" /></svg>
           </Button>
         </div>
