@@ -1,6 +1,6 @@
 [package]
 name = "tally"
-version = "0.2.0"
+version = "0.3.0"
 description = "Your AI coding tokens, right next to the clock."
 authors = ["Erwan <@ErwanCodes>"]
 license = "MIT"
