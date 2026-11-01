@@ -17,11 +17,15 @@ pub struct Settings {
     pub providers: BTreeMap<String, ProviderSettings>,
     /// Cache tokens are always shown apart; this decides whether the headline totals count them.
     pub include_cache: bool,
+    /// Notify past this many tokens today; `None` turns it off.
+    pub alert_daily: Option<u64>,
+    /// Notify past this many tokens this month; `None` turns it off.
+    pub alert_monthly: Option<u64>,
 }
 
 impl Default for Settings {
     fn default() -> Self {
-        Settings { providers: BTreeMap::new(), include_cache: true }
+        Settings { providers: BTreeMap::new(), include_cache: true, alert_daily: None, alert_monthly: None }
     }
 }
 

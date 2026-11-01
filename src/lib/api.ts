@@ -36,7 +36,12 @@ export type AgentInfo = {
   custom_path: string | null;
 };
 export type ProviderSettings = { disabled: boolean; path: string | null };
-export type Settings = { providers: Record<string, ProviderSettings>; include_cache: boolean };
+export type Settings = {
+  providers: Record<string, ProviderSettings>;
+  include_cache: boolean;
+  alert_daily: number | null;
+  alert_monthly: number | null;
+};
 export type ScanProgress = { done: number; total: number };
 
 /** Outside Tauri (plain `npm run dev`, screenshots) the app runs on sample data. */
@@ -56,6 +61,8 @@ export const api = {
   refresh: () => call<void>("refresh"),
   settings: () => call<Settings>("get_settings"),
   setSettings: (settings: Settings) => call<void>("set_settings", { settings }),
+  pricesUpdated: () => call<number | null>("get_prices_updated"),
+  updatePrices: () => call<number>("update_prices"),
   update: () => call<string | null>("get_update"),
   installUpdate: () => call<void>("install_update"),
 };

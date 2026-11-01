@@ -1,3 +1,4 @@
+mod alerts;
 mod commands;
 mod format;
 mod pricing;
@@ -25,13 +26,16 @@ pub struct AppState {
     pub scanning: Mutex<bool>,
     /// Bumped when watched folders change; the watcher thread rebuilds itself.
     pub watch_generation: Mutex<u64>,
+    pub alerts: Mutex<alerts::Fired>,
+    pub alerts_path: PathBuf,
+    pub prices_path: PathBuf,
 }
 
 fn data_dir() -> PathBuf {
     dirs::config_dir().unwrap_or_else(|| PathBuf::from(".")).join("Tally")
 }
 
-/// Refreshes the tray tooltip and tells the front to reload.
+/// Refreshes the tray tooltip, checks alerts and tells the front to reload.
 pub fn notify_updated(app: &AppHandle, state: &AppState) {
     let agents: Vec<String> = {
         let s = state.settings.lock();
@@ -42,6 +46,10 @@ pub fn notify_updated(app: &AppHandle, state: &AppState) {
         if let Some(tray) = app.tray_by_id(tray::TRAY_ID) {
             let _ = tray.set_tooltip(Some(format!("Today: {} tokens", format::compact(total))));
         }
+    }
+    let summary = state.store.lock().summary(&agents);
+    if let Ok(summary) = summary {
+        alerts::check(app, state, &summary);
     }
     let _ = app.emit("usage-updated", ());
 }
@@ -76,6 +84,9 @@ pub fn run() {
     let dir = data_dir();
     let store = Store::open(&dir.join("tally.db")).expect("open database");
     let settings_path = dir.join("settings.json");
+    let alerts_path = dir.join("alerts.json");
+    let prices_path = dir.join("prices.json");
+    pricing::load(&prices_path);
     let state = Arc::new(AppState {
         store: Mutex::new(store),
         settings: Mutex::new(Settings::load(&settings_path)),
@@ -83,6 +94,9 @@ pub fn run() {
         providers: providers::registry(),
         scanning: Mutex::new(false),
         watch_generation: Mutex::new(0),
+        alerts: Mutex::new(alerts::Fired::load(&alerts_path)),
+        alerts_path,
+        prices_path,
     });
     let started_hidden = std::env::args().any(|a| a == "--autostart");
 
@@ -99,6 +113,7 @@ pub fn run() {
                 .build(),
         )
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .manage(updater::Pending::default())
         .manage(state.clone())
@@ -113,6 +128,8 @@ pub fn run() {
             commands::refresh,
             commands::get_settings,
             commands::set_settings,
+            commands::get_prices_updated,
+            commands::update_prices,
             updater::get_update,
             updater::install_update,
         ])

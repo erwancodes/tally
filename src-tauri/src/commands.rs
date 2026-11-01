@@ -110,6 +110,19 @@ pub fn refresh(app: AppHandle, state: State<Arc<AppState>>) -> Res<()> {
 }
 
 #[tauri::command]
+pub fn get_prices_updated() -> Option<i64> {
+    crate::pricing::updated_ms()
+}
+
+/// The only network call for prices: runs when the user asks for it.
+#[tauri::command]
+pub async fn update_prices(app: AppHandle, state: State<'_, Arc<AppState>>) -> Res<i64> {
+    let updated = crate::pricing::update(&state.prices_path).await.map_err(err)?;
+    crate::notify_updated(&app, &state);
+    Ok(updated)
+}
+
+#[tauri::command]
 pub fn get_settings(state: State<Arc<AppState>>) -> Settings {
     state.settings.lock().clone()
 }

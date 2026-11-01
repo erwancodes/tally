@@ -50,6 +50,12 @@ export function SettingsView({ onChanged }: { onChanged: () => void }) {
         <Row title="Count cache" detail="Include cache read and write tokens in totals.">
           <Toggle label="Count cache" on={settings.include_cache} onChange={(v) => save({ ...settings, include_cache: v })} />
         </Row>
+        <Row title="Daily alert" detail="Notify me past this many tokens today. Leave empty to turn off.">
+          <LimitInput label="Daily alert in millions of tokens" value={settings.alert_daily} onChange={(v) => save({ ...settings, alert_daily: v })} />
+        </Row>
+        <Row title="Monthly alert" detail="Notify me past this many tokens this month. Leave empty to turn off.">
+          <LimitInput label="Monthly alert in millions of tokens" value={settings.alert_monthly} onChange={(v) => save({ ...settings, alert_monthly: v })} />
+        </Row>
       </section>
 
       <h2 className="text-[15px] font-medium">Agents</h2>
@@ -62,6 +68,8 @@ export function SettingsView({ onChanged }: { onChanged: () => void }) {
           onPath={(path) => setProvider(a.id, { path: path.trim() || null })}
         />
       ))}
+
+      <ModelPrices onChanged={onChanged} />
 
       <section className="rise flex items-center justify-between rounded-2xl bg-panel p-4">
         <div>
@@ -76,6 +84,51 @@ export function SettingsView({ onChanged }: { onChanged: () => void }) {
         </button>
       </section>
     </div>
+  );
+}
+
+function ModelPrices({ onChanged }: { onChanged: () => void }) {
+  const [updated, setUpdated] = useState<number | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    api.pricesUpdated().then(setUpdated);
+  }, []);
+
+  const update = async () => {
+    setBusy(true);
+    setFailed(false);
+    try {
+      setUpdated(await api.updatePrices());
+      onChanged();
+    } catch {
+      setFailed(true);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const status = failed
+    ? "Update failed. Your current prices are kept."
+    : updated === null
+      ? "Using built-in prices. Only this button goes online for prices."
+      : `Updated ${new Date(updated).toLocaleDateString()}. Only this button goes online for prices.`;
+
+  return (
+    <section className="rise flex items-center justify-between gap-6 rounded-2xl bg-panel p-4">
+      <div>
+        <div className="text-[13.5px]">Model prices</div>
+        <div className="text-[12.5px] text-ink-3">{status}</div>
+      </div>
+      <button
+        onClick={update}
+        disabled={busy}
+        className="shrink-0 rounded-lg bg-panel-2 px-3.5 py-1.5 text-[13px] transition-colors hover:bg-panel-3 active:scale-[0.98] disabled:opacity-60"
+      >
+        {busy ? "Updating…" : "Update prices"}
+      </button>
+    </section>
   );
 }
 
@@ -119,6 +172,36 @@ function Row({ title, detail, children }: { title: string; detail: string; child
       </div>
       {children}
     </div>
+  );
+}
+
+/** Edited in millions of tokens, stored in tokens. */
+function LimitInput({ value, onChange, label }: { value: number | null; onChange: (v: number | null) => void; label: string }) {
+  const shown = value === null ? "" : String(value / 1e6);
+  const [text, setText] = useState(shown);
+  useEffect(() => setText(shown), [shown]);
+
+  const commit = () => {
+    const millions = Number(text.replace(",", "."));
+    const next = text.trim() && millions > 0 ? Math.round(millions * 1e6) : null;
+    setText(next === null ? "" : String(next / 1e6));
+    if (next !== value) onChange(next);
+  };
+
+  return (
+    <label className="flex shrink-0 items-center gap-2 text-[13px] text-ink-3">
+      <input
+        aria-label={label}
+        value={text}
+        inputMode="decimal"
+        onChange={(e) => setText(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
+        placeholder="Off"
+        className="h-8 w-16 rounded-lg bg-panel-2 px-2.5 text-right text-[13px] text-ink outline-none placeholder:text-ink-3 focus:bg-panel-3"
+      />
+      M
+    </label>
   );
 }
 

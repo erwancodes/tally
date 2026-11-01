@@ -76,7 +76,7 @@ const sessions: SessionTotals[] = Array.from({ length: 14 }, (_, i) => {
   };
 });
 
-let settings: Settings = { providers: {}, include_cache: true };
+let settings: Settings = { providers: {}, include_cache: true, alert_daily: null, alert_monthly: null };
 
 const handlers: Record<string, (args?: Record<string, unknown>) => unknown> = {
   get_overview: (): Overview => ({
@@ -135,6 +135,8 @@ const handlers: Record<string, (args?: Record<string, unknown>) => unknown> = {
     settings = args?.settings as Settings;
   },
   refresh: () => undefined,
+  get_prices_updated: () => null,
+  update_prices: () => Date.now(),
   get_update: () => null,
 };
 
