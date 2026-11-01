@@ -4,6 +4,8 @@ export const AGENTS: Record<string, { name: string; color: string }> = {
   codex: { name: "Codex", color: "var(--codex)" },
   opencode: { name: "OpenCode", color: "var(--opencode)" },
   kimi: { name: "Kimi Code", color: "var(--kimi)" },
+  grok: { name: "Grok CLI", color: "var(--grok)" },
+  cursor: { name: "Cursor", color: "var(--cursor)" },
 };
 
 export const agentName = (id: string) => AGENTS[id]?.name ?? id;

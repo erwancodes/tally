@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Tally · your AI tokens in the Windows taskbar</title>
-  <meta name="description" content="Tally lives in the Windows taskbar and counts your Claude Code, Codex, OpenCode and Kimi Code tokens, by day, week and month. 100% local, MIT open source.">
+  <meta name="description" content="Tally lives in the Windows taskbar and counts your Claude Code, Codex, OpenCode, Kimi Code, Grok CLI and Cursor tokens, by day, week and month. 100% local, MIT open source.">
   <meta name="theme-color" content="#0e0e11">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="canonical" href="https://tally.erwanx.com/">
@@ -40,7 +40,7 @@
     <section class="hero" aria-labelledby="hero-title">
       <div class="hero__text">
         <h1 id="hero-title" class="reveal">Your AI tokens, right next to the clock.</h1>
-        <p class="hero__lead reveal">Tally lives in the Windows taskbar and counts your Claude Code, Codex, OpenCode and Kimi Code tokens, by day, week and month. Nothing leaves your PC.</p>
+        <p class="hero__lead reveal">Tally lives in the Windows taskbar and counts your Claude Code, Codex, OpenCode, Kimi Code, Grok CLI and Cursor tokens, by day, week and month. Nothing leaves your PC.</p>
         <div class="hero__actions reveal">
           <a class="btn btn--primary" href="https://github.com/erwancodes/tally/releases/latest">
             <svg width="18" height="18" viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M1 2.5l5.5-.8v5.6H1zM7.3 1.6L15 .5v6.8H7.3zM1 8.1h5.5v5.6L1 13zM7.3 8.1H15v6.9l-7.7-1.1z"/></svg>
@@ -203,6 +203,16 @@
             <span class="index__state">Supported</span>
             <div class="index__inline" data-ui><code-path>~\.kimi\sessions\**\wire.jsonl</code-path></div>
           </li>
+          <li class="index__row" data-preview="grok">
+            <span class="index__name">Grok CLI</span>
+            <span class="index__state">Supported</span>
+            <div class="index__inline" data-ui><code-path>~\.grok\sessions\**\usage.json</code-path></div>
+          </li>
+          <li class="index__row" data-preview="cursor">
+            <span class="index__name">Cursor</span>
+            <span class="index__state">Partial</span>
+            <div class="index__inline" data-ui><code-path>%APPDATA%\Cursor\User\globalStorage\state.vscdb</code-path></div>
+          </li>
         </ul>
         <div class="index__frame" aria-hidden="true">
           <figure class="preview is-on" data-for="claude" data-ui>
@@ -237,6 +247,20 @@
             </div>
             <figcaption>Uncached input, output, cache read and write, per step.</figcaption>
           </figure>
+          <figure class="preview" data-for="grok" data-ui>
+            <div class="preview__path">~\.grok\sessions\…\usage.json</div>
+            <div class="preview__rows">
+              <div><span>grok-4.7</span><b class="num">156k</b></div>
+            </div>
+            <figcaption>Uncached input, output and cache read, per turn and model.</figcaption>
+          </figure>
+          <figure class="preview" data-for="cursor" data-ui>
+            <div class="preview__path">%APPDATA%\Cursor\User\globalStorage\state.vscdb</div>
+            <div class="preview__rows">
+              <div><span>composer-2</span><b class="num">15.4k</b></div>
+            </div>
+            <figcaption>Input and output, only for messages where Cursor saves a count.</figcaption>
+          </figure>
         </div>
       </div>
       <a class="link-arrow reveal" href="https://github.com/erwancodes/tally/blob/main/docs/ADD_A_PROVIDER.md">Add your agent <span aria-hidden="true">→</span></a>
@@ -263,7 +287,7 @@
         </details>
         <details class="card" name="faq">
           <summary><span class="card__tab">Agents</span><span class="card__q">Which agents are supported?</span><span class="plus" aria-hidden="true"></span></summary>
-          <div class="card__a"><p>Claude Code, Codex, OpenCode and Kimi Code. Each agent is a small Rust module: the <code-path>ADD_A_PROVIDER.md</code-path> guide shows how to add one.</p></div>
+          <div class="card__a"><p>Claude Code, Codex, OpenCode, Kimi Code, Grok CLI and Cursor. Each agent is a small Rust module: the <code-path>ADD_A_PROVIDER.md</code-path> guide shows how to add one.</p></div>
         </details>
         <details class="card" name="faq">
           <summary><span class="card__tab">macOS</span><span class="card__q">Does it work on macOS or Linux?</span><span class="plus" aria-hidden="true"></span></summary>

@@ -41,6 +41,8 @@ const PRICES: &[Price] = &[
     p("claude-sonnet-4-6", 3.0, 15.0, 0.3),
     p("claude-haiku-5-5", 0.1, 0.5, 0.01),
     p("claude-haiku-4-5", 1.0, 5.0, 0.1),
+    p("grok-4.7", 2.0, 6.0, 0.5),
+    p("grok-build", 1.0, 2.0, 0.2),
 ];
 
 /// $ per million tokens.

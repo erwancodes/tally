@@ -25,6 +25,8 @@ Tally lives in the Windows taskbar and counts the tokens you burn with your AI c
 | Codex CLI | `~\.codex\sessions\**\rollout-*.jsonl` | Supported |
 | OpenCode | `~\.local\share\opencode\opencode.db` (and legacy `storage\message\**\*.json`) | Supported |
 | Kimi Code | `~\.kimi\sessions\**\wire.jsonl` | Supported |
+| Grok CLI | `~\.grok\sessions\**\usage.json` | Supported |
+| Cursor | `%APPDATA%\Cursor\User\globalStorage\state.vscdb` | Partial: Cursor saves token counts for only some messages |
 
 Your agent isn't there? [Add it](docs/ADD_A_PROVIDER.md), it's one Rust file.
 

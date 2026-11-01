@@ -3,6 +3,8 @@
 
 mod claude_code;
 mod codex;
+mod cursor;
+mod grok;
 mod kimi;
 mod opencode;
 
@@ -16,6 +18,8 @@ use walkdir::WalkDir;
 
 pub use claude_code::ClaudeCode;
 pub use codex::Codex;
+pub use cursor::Cursor;
+pub use grok::Grok;
 pub use kimi::Kimi;
 pub use opencode::OpenCode;
 
@@ -59,7 +63,7 @@ pub trait Provider: Send + Sync {
 }
 
 pub fn registry() -> Vec<Box<dyn Provider>> {
-    vec![Box::new(ClaudeCode), Box::new(Codex), Box::new(OpenCode), Box::new(Kimi)]
+    vec![Box::new(ClaudeCode), Box::new(Codex), Box::new(OpenCode), Box::new(Kimi), Box::new(Grok), Box::new(Cursor)]
 }
 
 pub(crate) fn home() -> PathBuf {

@@ -14,6 +14,8 @@
   --codex: #a99cf2;
   --opencode: #7cc4e8;
   --kimi: #f0c27a;
+  --grok: #e88fb8;
+  --cursor: #c9c9d1;
   --up: #8fd3a8;
   --down: #f0a08f;
   color-scheme: dark;
@@ -31,6 +33,8 @@
   --color-codex: var(--codex);
   --color-opencode: var(--opencode);
   --color-kimi: var(--kimi);
+  --color-grok: var(--grok);
+  --color-cursor: var(--cursor);
   --color-up: var(--up);
   --color-down: var(--down);
   --font-sans: "Inter Variable", system-ui, sans-serif;
